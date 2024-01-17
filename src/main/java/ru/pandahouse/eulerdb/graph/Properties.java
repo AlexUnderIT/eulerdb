@@ -1,5 +1,7 @@
 package ru.pandahouse.eulerdb.graph;
 
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
+
 public class Properties {
     /*
     * {
@@ -31,31 +33,35 @@ public class Properties {
         return nodeId;
     }
 
-    public void setNodeId(Long nodeId) {
+    public Properties setNodeId(Long nodeId) {
         this.nodeId = nodeId;
+        return this;
     }
 
     public String getAuthor() {
         return author;
     }
 
-    public void setAuthor(String author) {
+    public Properties setAuthor(String author) {
         this.author = author;
+        return this;
     }
 
     public String getAuthorEmail() {
         return authorEmail;
     }
 
-    public void setAuthorEmail(String authorEmail) {
+    public Properties setAuthorEmail(String authorEmail) {
         this.authorEmail = authorEmail;
+        return this;
     }
 
     public Long getParentNodeId() {
         return parentNodeId;
     }
 
-    public void setParentNodeId(Long parentNodeId) {
+    public Properties setParentNodeId(Long parentNodeId) {
         this.parentNodeId = parentNodeId;
+        return this;
     }
 }

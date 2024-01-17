@@ -84,7 +84,7 @@ public class RocksDbService implements KVRepository<String, Object> {
         try{
             rocksDB.delete(key.getBytes(StandardCharsets.UTF_8));
         } catch(RocksDBException e){
-            LOGGER.error("Finding error. Cause: {} , message: {}", e.getCause(), e.getMessage());
+            LOGGER.error("Deleting error. Cause: {} , message: {}", e.getCause(), e.getMessage());
             return false;
         }
         return true;

@@ -55,7 +55,7 @@ public class RocksDbService implements KVRepository<String, Object> {
 
     @Override
     public boolean save(String key, Object value) {
-        LOGGER.info("Saving value {} with key {}", value, key);
+        LOGGER.info("Saving value '{}' with key '{}'", value, key);
         try{
             rocksDB.put(key.getBytes(StandardCharsets.UTF_8), SerializationUtils.serialize(value));
         } catch (RocksDBException e){
@@ -68,10 +68,11 @@ public class RocksDbService implements KVRepository<String, Object> {
     @Override
     public Optional<Object> find(String key) {
         Object value = null;
-        LOGGER.info("Trying find value with key {}", key);
+        LOGGER.info("Trying to find value with key '{}'", key);
         try{
             byte[] bytes = rocksDB.get(key.getBytes(StandardCharsets.UTF_8));
             if (bytes != null) value = SerializationUtils.deserialize(bytes);
+            LOGGER.info("Find value '{}' with key '{}'", value, key);
         } catch(RocksDBException e){
             LOGGER.error("Finding error. Cause: {} , message: {}", e.getCause(), e.getMessage());
         }
@@ -80,9 +81,10 @@ public class RocksDbService implements KVRepository<String, Object> {
 
     @Override
     public boolean delete(String key) {
-        LOGGER.info("Trying to delete value with key {}", key);
+        LOGGER.info("Trying to delete value with key '{}'", key);
         try{
             rocksDB.delete(key.getBytes(StandardCharsets.UTF_8));
+            LOGGER.info("Successfully deleted value with key '{}'", key);
         } catch(RocksDBException e){
             LOGGER.error("Deleting error. Cause: {} , message: {}", e.getCause(), e.getMessage());
             return false;

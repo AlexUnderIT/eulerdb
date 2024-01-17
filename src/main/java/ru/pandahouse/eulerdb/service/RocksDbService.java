@@ -30,7 +30,7 @@ public class RocksDbService implements KVRepository<String, Object> {
         this.rocksDB = rocksDB;
     }
 
-    /*public void get() {
+    public void get() {
         try {
             long startMillis = System.currentTimeMillis();
             LOGGER.info("method start");
@@ -51,7 +51,7 @@ public class RocksDbService implements KVRepository<String, Object> {
         } catch (RocksDBException e) {
             LOGGER.info(e.getMessage(), e);
         }
-    }*/
+    }
 
     @Override
     public boolean save(String key, Object value) {

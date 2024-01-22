@@ -13,8 +13,7 @@ import ru.pandahouse.eulerdb.repository.KVRepository;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class RocksDbService implements KVRepository<String, Object> {
@@ -56,27 +55,21 @@ public class RocksDbService implements KVRepository<String, Object> {
     @Override
     public boolean save(String key, Object value) {
         LOGGER.info("Saving value '{}' with key '{}'", value, key);
-        try{
-            rocksDB.put(key.getBytes(StandardCharsets.UTF_8), SerializationUtils.serialize(value));
-        } catch (RocksDBException e){
-            LOGGER.error("Saving error. Cause: {} , message: {}", e.getCause(), e.getMessage());
-            return false;
-        }
-        return true;
+        return addValue(key, value);
     }
 
     @Override
-    public Optional<Object> find(String key) {
-        Object value = null;
+    public Optional<List<Object>> find(String key) {
+        List<Object> value = new LinkedList<>();
         LOGGER.info("Trying to find value with key '{}'", key);
         try{
             byte[] bytes = rocksDB.get(key.getBytes(StandardCharsets.UTF_8));
-            if (bytes != null) value = SerializationUtils.deserialize(bytes);
+            if (bytes != null) value = (List)(SerializationUtils.deserialize(bytes));
             LOGGER.info("Find value '{}' with key '{}'", value, key);
         } catch(RocksDBException e){
             LOGGER.error("Finding error. Cause: {} , message: {}", e.getCause(), e.getMessage());
         }
-        return value != null ? Optional.of(value) : Optional.empty();
+        return value.stream().findAny().isPresent() ? Optional.of(value) : Optional.empty();
     }
 
     @Override
@@ -87,6 +80,24 @@ public class RocksDbService implements KVRepository<String, Object> {
             LOGGER.info("Successfully deleted value with key '{}'", key);
         } catch(RocksDBException e){
             LOGGER.error("Deleting error. Cause: {} , message: {}", e.getCause(), e.getMessage());
+            return false;
+        }
+        return true;
+    }
+
+    private boolean addValue(String key, Object value){
+        List<Object> valueList = new LinkedList<>();
+        Optional<List<Object>> findResult = find(key);
+        if (findResult.isPresent()){
+            valueList = findResult.get();
+        }
+        boolean present = valueList.stream().anyMatch(i -> i.equals(value));
+        if(!present) valueList.add(value);
+        try{
+            rocksDB.put(key.getBytes(), SerializationUtils.serialize(valueList));
+            LOGGER.info("Final value list: {}", valueList);
+        }catch(RocksDBException e){
+            LOGGER.error("Saving error. Cause: {} , message: {}", e.getCause(), e.getMessage());
             return false;
         }
         return true;

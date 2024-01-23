@@ -1,9 +1,6 @@
 package ru.pandahouse.eulerdb.service;
 
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
-import org.rocksdb.WriteOptions;
+import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +18,15 @@ public class RocksDbService implements KVRepository<String, Object> {
     private static final Logger LOGGER = LoggerFactory.getLogger(RocksDbService.class);
 
     private final RocksDB rocksDB;
+    private final List<ColumnFamilyHandle> columnFamilyHandleList;
 
     @Autowired
     public RocksDbService(
-        RocksDB rocksDB
+        RocksDB rocksDB,
+        List<ColumnFamilyHandle> columnFamilyHandleList
     ) {
         this.rocksDB = rocksDB;
+        this.columnFamilyHandleList = columnFamilyHandleList;
     }
 
     public void get() {
@@ -44,6 +44,7 @@ public class RocksDbService implements KVRepository<String, Object> {
             LOGGER.info("open {} ms", putMillis - startMillis);
 
             rocksDB.get(bytes);
+
             long getMillis = System.currentTimeMillis();
             LOGGER.info("open {} ms", getMillis - putMillis);
 
@@ -54,32 +55,32 @@ public class RocksDbService implements KVRepository<String, Object> {
 
     @Override
     public boolean save(String key, Object value) {
-        LOGGER.info("Saving value '{}' with key '{}'", value, key);
+        LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]---", value, key);
         return addValue(key, value);
     }
 
     @Override
     public Optional<List<Object>> find(String key) {
         List<Object> value = new LinkedList<>();
-        LOGGER.info("Trying to find value with key '{}'", key);
+        LOGGER.info("---[DB] Operation GET. Key: [{}]---", key);
         try{
             byte[] bytes = rocksDB.get(key.getBytes(StandardCharsets.UTF_8));
             if (bytes != null) value = (List)(SerializationUtils.deserialize(bytes));
-            LOGGER.info("Find value '{}' with key '{}'", value, key);
+            LOGGER.info("---[DB] GET value [{}] with key [{}]---", value, key);
         } catch(RocksDBException e){
-            LOGGER.error("Finding error. Cause: {} , message: {}", e.getCause(), e.getMessage());
+            LOGGER.error("---[ERROR] GET error. Cause: {} , message: [{}]---", e.getCause(), e.getMessage());
         }
         return value.stream().findAny().isPresent() ? Optional.of(value) : Optional.empty();
     }
 
     @Override
     public boolean delete(String key) {
-        LOGGER.info("Trying to delete value with key '{}'", key);
+        LOGGER.info("---[DB] Operation DELETE. Key: [{}]---", key);
         try{
             rocksDB.delete(key.getBytes(StandardCharsets.UTF_8));
-            LOGGER.info("Successfully deleted value with key '{}'", key);
+            LOGGER.info("---[DB] DELETE value with key [{}]---", key);
         } catch(RocksDBException e){
-            LOGGER.error("Deleting error. Cause: {} , message: {}", e.getCause(), e.getMessage());
+            LOGGER.error("---[ERROR] DELETE error. Cause: {} , message: {}---", e.getCause(), e.getMessage());
             return false;
         }
         return true;
@@ -95,9 +96,9 @@ public class RocksDbService implements KVRepository<String, Object> {
         if(!present) valueList.add(value);
         try{
             rocksDB.put(key.getBytes(), SerializationUtils.serialize(valueList));
-            LOGGER.info("Final value list: {}", valueList);
+            LOGGER.info("---[DB] Values: [{}]---", valueList);
         }catch(RocksDBException e){
-            LOGGER.error("Saving error. Cause: {} , message: {}", e.getCause(), e.getMessage());
+            LOGGER.error("---[ERROR] PUT error. Cause: {} , message: {}---", e.getCause(), e.getMessage());
             return false;
         }
         return true;

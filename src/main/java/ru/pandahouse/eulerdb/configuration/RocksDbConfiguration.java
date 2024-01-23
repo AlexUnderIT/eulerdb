@@ -1,39 +1,89 @@
 package ru.pandahouse.eulerdb.configuration;
 
-import org.rocksdb.Options;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
+import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.annotation.PreDestroy;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 
 @Configuration
 public class RocksDbConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RocksDbConfiguration.class);
-
-    //TODO: вынести путь в пропертис файл
     private static final String DB_PATH = "/home/alexunderit/rocksdb";
+    private RocksDB db;
+    private DBOptions options;
+    private ColumnFamilyOptions cfOpts;
+    private List<ColumnFamilyHandle> columnFamilyHandleList;
+    private List<ColumnFamilyDescriptor> cfDescriptors;
 
     @Bean
-    public RocksDB rocksDb() throws RocksDBException {
+    public RocksDB rocksDb(List<ColumnFamilyDescriptor> cfDescriptors,
+                           List<ColumnFamilyHandle> columnFamilyHandleList,
+                           DBOptions options) throws RocksDBException {
         RocksDB.loadLibrary();
-
         File dbDir = new File(DB_PATH);
 
-        Options options = new Options();
-        options.setCreateIfMissing(true);
-
         long startMillis = System.currentTimeMillis();
-        RocksDB db = RocksDB.open(options, dbDir.getAbsolutePath());
+        try{
+            db = RocksDB.open(options, dbDir.getAbsolutePath(), cfDescriptors, columnFamilyHandleList);
+        } catch (RocksDBException e){
+            LOGGER.error(e.getMessage());
+        }
         long openMillis = System.currentTimeMillis();
 
-        LOGGER.info("open DB {} ms", openMillis - startMillis);
+        LOGGER.info("---[STARTED DB IN {} MS]---", openMillis - startMillis);
 
         return db;
     }
 
+    @Bean
+    public List<ColumnFamilyDescriptor> cfDescriptors(ColumnFamilyOptions columnFamilyOptions) {
+        this.cfDescriptors = Arrays.asList(
+                new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY, columnFamilyOptions),
+                new ColumnFamilyDescriptor("metadata".getBytes(StandardCharsets.UTF_8), columnFamilyOptions),
+                new ColumnFamilyDescriptor("index_to_hash".getBytes(StandardCharsets.UTF_8), columnFamilyOptions)
+        );
+        return cfDescriptors;
+    }
+    @Bean
+    public DBOptions dbOptions(){
+        options = new DBOptions()
+                .setCreateIfMissing(true)
+                .setCreateMissingColumnFamilies(true);
+        return options;
+    }
+    @Bean
+    public ColumnFamilyOptions columnFamilyOptions() {
+        cfOpts = new ColumnFamilyOptions()
+                .optimizeUniversalStyleCompaction();
+        return cfOpts;
+    }
+
+    @Bean
+    @Qualifier("columnFamilies")
+    public List<ColumnFamilyHandle> columnFamilyConfig() {
+        columnFamilyHandleList = new ArrayList<>();
+        return columnFamilyHandleList;
+    }
+
+    @PreDestroy
+    public void closeConnections() {
+        for(final ColumnFamilyHandle columnFamilyHandle: columnFamilyHandleList){
+            columnFamilyHandle.close();
+        }
+        options.close();
+        cfOpts.close();
+        LOGGER.info("----[CLOSE DATABASE]----");
+        db.close();
+    }
 }

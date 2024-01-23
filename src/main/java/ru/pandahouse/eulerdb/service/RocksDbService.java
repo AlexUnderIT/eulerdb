@@ -66,7 +66,7 @@ public class RocksDbService implements KVRepository<String, Object> {
         try{
             byte[] bytes = rocksDB.get(key.getBytes(StandardCharsets.UTF_8));
             if (bytes != null) value = (List)(SerializationUtils.deserialize(bytes));
-            LOGGER.info("---[DB] GET value [{}] with key [{}]---", value, key);
+            LOGGER.info("---[DB] GET value {} with key [{}]---", value, key);
         } catch(RocksDBException e){
             LOGGER.error("---[ERROR] GET error. Cause: {} , message: [{}]---", e.getCause(), e.getMessage());
         }
@@ -84,6 +84,28 @@ public class RocksDbService implements KVRepository<String, Object> {
             return false;
         }
         return true;
+    }
+    //TODO: Сделать для колоночных семейств:/*
+    // 1. Чтобы добавить, изменить нужны CFHandler, ключ и значение
+    // 2. Сделать маппер для поиска имени CFHandler'a (какой-то вставил - над потестить)
+    // 3. Дописать бизнес-логику для колоночных семейств
+    // */
+
+
+    public boolean saveColumnFamily(){
+        columnFamilyHandleList.forEach(i -> {
+            try {
+                System.out.println(new String(i.getName()));
+            } catch (RocksDBException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        System.out.println("---LOCAL BYTES TEST---");
+        System.out.println("metadata");
+        System.out.println("index_to_hash");
+        System.out.println(new String(RocksDB.DEFAULT_COLUMN_FAMILY));
+        return true;
+
     }
 
     private boolean addValue(String key, Object value){
@@ -103,4 +125,21 @@ public class RocksDbService implements KVRepository<String, Object> {
         }
         return true;
     }
+
+    private ColumnFamilyHandle getColumnFamilyHandle(byte[] name) {
+        return columnFamilyHandleList
+                .stream()
+                .filter(
+                        handle -> {
+                            try {
+                                return Arrays.equals(handle.getName(), name);
+                            } catch (Exception ex) {
+                                throw new RuntimeException(ex);
+                            }
+                        })
+                .findAny()
+                .orElse(null);
+    }
+
+
 }

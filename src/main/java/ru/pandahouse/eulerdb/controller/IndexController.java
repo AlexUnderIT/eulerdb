@@ -28,6 +28,10 @@ public class IndexController {
                              @PathVariable("value") Object value){
         rocksDbService.save(key, value);
     }
+    @GetMapping("/getCol")
+    public void getColumn(){
+        rocksDbService.saveColumnFamily();
+    }
     @GetMapping("/find/{key}")
     public void getSmthByKey(@PathVariable("key") String key){
         rocksDbService.find(key);

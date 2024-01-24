@@ -5,9 +5,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import ru.pandahouse.eulerdb.service.RocksDbService;
 
-import java.sql.SQLOutput;
-import java.util.Optional;
-
 @RestController
 public class IndexController {
 
@@ -28,16 +25,33 @@ public class IndexController {
                              @PathVariable("value") Object value){
         rocksDbService.save(key, value);
     }
-    @GetMapping("/getCol")
-    public void getColumn(){
-        rocksDbService.saveColumnFamily();
+    @GetMapping("/putCol/{name}/{key}/{value}")
+    public void putColumnFamilyData(@PathVariable("name") String name,
+                          @PathVariable("key") String key,
+                          @PathVariable("value") Object value){
+        rocksDbService.saveColumnFamily(name, key, value);
+    }
+    @GetMapping("/getCol/{name}/{key}")
+    public void getColumnFamilyData(@PathVariable("name") String name,
+                                    @PathVariable("key") String key){
+        rocksDbService.findColumnFamilyValue(name, key);
+    }
+    @GetMapping("/delCol/{name}/{key}")
+    public void delColumnFamilyData(@PathVariable("name") String name,
+                                    @PathVariable("key") String key){
+        rocksDbService.deleteColumnFamilyValue(name, key);
     }
     @GetMapping("/find/{key}")
-    public void getSmthByKey(@PathVariable("key") String key){
+    public void getByKey(@PathVariable("key") String key){
         rocksDbService.find(key);
     }
     @GetMapping("/delete/{key}")
-    public void deleteSmthByKey(@PathVariable("key") String key){
+    public void deleteByKey(@PathVariable("key") String key){
         rocksDbService.delete(key);
     }
+    /*@GetMapping("/merge/{key}/{value}")
+    public void mergeTest(@PathVariable("key") String key,
+                          @PathVariable("value") Object value){
+        rocksDbService.mergeTest(key, value);
+    }*/
 }

@@ -32,7 +32,6 @@ public class RocksDbConfiguration {
                            DBOptions options) throws RocksDBException {
         RocksDB.loadLibrary();
         File dbDir = new File(DB_PATH);
-
         long startMillis = System.currentTimeMillis();
         try{
             db = RocksDB.open(options, dbDir.getAbsolutePath(), cfDescriptors, columnFamilyHandleList);
@@ -57,6 +56,13 @@ public class RocksDbConfiguration {
     }
     @Bean
     public DBOptions dbOptions(){
+        //FIXME: суть в чем: есть оператор merge(), но мы его не можем использовать,
+        // если используем колоночные семейства, потому что метод setMergeOperator() в
+        // в DBOptions отсутствует, а без DBOptions не запустить бд с колоночными семействами.
+        /*Options options1 = new Options();
+        options1.setMergeOperatorName("StringMergeOperator");
+        StringAppendOperator stringAppendOperator = new StringAppendOperator();
+        options1.setMergeOperator(stringAppendOperator);*/
         options = new DBOptions()
                 .setCreateIfMissing(true)
                 .setCreateMissingColumnFamilies(true);

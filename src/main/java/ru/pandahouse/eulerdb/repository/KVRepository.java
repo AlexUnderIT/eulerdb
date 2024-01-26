@@ -9,4 +9,6 @@ public interface KVRepository<K, V> {
     Optional<List<V>> find(K key);
 
     boolean delete(K key);
+
+    boolean add(K key, V value);
 }

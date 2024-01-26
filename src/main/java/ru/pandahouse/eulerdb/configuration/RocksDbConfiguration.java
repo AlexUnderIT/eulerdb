@@ -75,7 +75,8 @@ public class RocksDbConfiguration {
     @Bean
     public ColumnFamilyOptions columnFamilyOptions() {
         cfOpts = new ColumnFamilyOptions()
-                .optimizeUniversalStyleCompaction();
+                .optimizeUniversalStyleCompaction()
+                /*.setMergeOperator(какой-то мердж оператор)*/;
         return cfOpts;
     }
 

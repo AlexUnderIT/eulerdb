@@ -13,7 +13,10 @@ import ru.pandahouse.eulerdb.repository.KVRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
-
+//TODO: Поправить логику, потому что есть вариант изначально не создавать
+// колоночные семейства просто прокинуть бином дексрипторы, а после
+// при необходимости создавать уже колоночные семейства, таким образом у нас
+// появится возможность использовать merge оператор.
 @Service
 public class RocksDbService implements KVRepository<String, Object> {
 
@@ -151,7 +154,6 @@ public class RocksDbService implements KVRepository<String, Object> {
         return true;
     }
 
-    //TODO: need to be tested: HAVE TEST FIELDS
     public Optional<List<Object>> findMultipleColumnFamilyValues(List<String> keyList) {
         List<byte[]> keyByteList = keyList.stream().map(String::getBytes).collect(Collectors.toList());
         List<Object> resultValueList = new ArrayList<>();
@@ -169,7 +171,6 @@ public class RocksDbService implements KVRepository<String, Object> {
         return resultValueList.isEmpty() ? Optional.empty() : Optional.of(resultValueList);
     }
 
-    //TODO: need to be tested: HAVE TEST FIELDS
     public boolean deleteMultipleColumnFamilyValues(String columnFamilyHandleName, String beginKey, String endKey) {
         ColumnFamilyHandle columnFamilyHandle = getColumnFamilyHandleByName(columnFamilyHandleName.getBytes());
         try {

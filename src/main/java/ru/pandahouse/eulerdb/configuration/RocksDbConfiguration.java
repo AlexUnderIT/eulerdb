@@ -23,16 +23,13 @@ public class RocksDbConfiguration {
     private RocksDB db;
     private DBOptions dbOptions;
 
-    /*private Options options;*/
     private ColumnFamilyOptions cfOpts;
     private List<ColumnFamilyHandle> columnFamilyHandleList;
 
     @Bean
     public RocksDB rocksDb(List<ColumnFamilyDescriptor> cfDescriptors,
                            List<ColumnFamilyHandle> columnFamilyHandleList,
-                           DBOptions dbOptions)
-                           /*Options options)*/
-    throws RocksDBException {
+                           DBOptions dbOptions) {
         RocksDB.loadLibrary();
         File dbDir = new File(DB_PATH);
         long startMillis = System.currentTimeMillis();
@@ -59,13 +56,7 @@ public class RocksDbConfiguration {
 
     @Bean
     public DBOptions dbOptions() {
-        //FIXME: суть в чем: есть оператор merge(), но мы его не можем использовать,
-        // если используем колоночные семейства, потому что метод setMergeOperator() в
-        // в DBOptions отсутствует, а без DBOptions не запустить бд с колоночными семействами.
-        /*Options options1 = new Options();
-        options1.setMergeOperatorName("StringMergeOperator");
-        StringAppendOperator stringAppendOperator = new StringAppendOperator();
-        options1.setMergeOperator(stringAppendOperator);*/
+
         dbOptions = new DBOptions()
                 .setCreateIfMissing(true)
                 .setCreateMissingColumnFamilies(true);
@@ -75,8 +66,7 @@ public class RocksDbConfiguration {
     @Bean
     public ColumnFamilyOptions columnFamilyOptions() {
         cfOpts = new ColumnFamilyOptions()
-                .optimizeUniversalStyleCompaction()
-                /*.setMergeOperator(какой-то мердж оператор)*/;
+                .optimizeUniversalStyleCompaction();
         return cfOpts;
     }
 
@@ -86,16 +76,6 @@ public class RocksDbConfiguration {
         columnFamilyHandleList = new ArrayList<>();
         return columnFamilyHandleList;
     }
-
-    /*@Bean
-    public Options options() {
-        return options = new Options()
-                .setCreateIfMissing(true)
-                .setCreateMissingColumnFamilies(true)
-                .setMergeOperator(new StringAppendOperator(", "));
-
-    }*/
-
     @PreDestroy
     public void closeConnections() {
         for (final ColumnFamilyHandle columnFamilyHandle : columnFamilyHandleList) {

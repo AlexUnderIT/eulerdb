@@ -13,10 +13,7 @@ import ru.pandahouse.eulerdb.repository.KVRepository;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
-//TODO: Поправить логику, потому что есть вариант изначально не создавать
-// колоночные семейства просто прокинуть бином дексрипторы, а после
-// при необходимости создавать уже колоночные семейства, таким образом у нас
-// появится возможность использовать merge оператор.
+
 @Service
 public class RocksDbService implements KVRepository<String, Object> {
 
@@ -52,7 +49,7 @@ public class RocksDbService implements KVRepository<String, Object> {
         LOGGER.info("---[DB] Operation GET. Key: [{}].", key);
         try {
             byte[] bytes = rocksDB.get(key.getBytes(StandardCharsets.UTF_8));
-            if (bytes != null) value = new LinkedList<>(List.of(SerializationUtils.deserialize(bytes)));
+            if (bytes != null) value = new LinkedList<>(List.of(Objects.requireNonNull(SerializationUtils.deserialize(bytes))));
             LOGGER.info("---[DB] GET value {} with key [{}].", value, key);
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] GET error. Cause: {} , message: [{}].", e.getCause(), e.getMessage());
@@ -96,7 +93,7 @@ public class RocksDbService implements KVRepository<String, Object> {
         return valueList.isEmpty() ? Optional.empty() : Optional.of(valueList);
     }
 
-    //Удаляет в диапазоне [beginKey, endKey), не велючая значения endKey
+    //Удаляет в диапазоне [beginKey, endKey), не включая значения endKey
     public boolean deleteMultipleKeys(String beginKey, String endKey) {
         LOGGER.info("---[DB] Operation DELETE WITH MULTIPLE KEYS. Begin key: [{}], end key (not included)   : [{}]", beginKey, endKey);
         try {
@@ -217,19 +214,6 @@ public class RocksDbService implements KVRepository<String, Object> {
         }
         return true;
     }
-
-    private List<String> getColumnFamiliesName() {
-        List<String> columnFamiliesNameList = columnFamilyHandleList.stream().map(i -> {
-            try {
-                return new String(i.getName());
-            } catch (RocksDBException e) {
-                throw new RuntimeException(e);
-            }
-        }).collect(Collectors.toList());
-        LOGGER.info("ColumnFamilies names are: {}", columnFamiliesNameList);
-        return columnFamiliesNameList;
-    }
-
     private ColumnFamilyHandle getColumnFamilyHandleByName(byte[] name) {
         return columnFamilyHandleList
                 .stream()
@@ -244,5 +228,4 @@ public class RocksDbService implements KVRepository<String, Object> {
                 .findAny()
                 .orElse(null);
     }
-
 }

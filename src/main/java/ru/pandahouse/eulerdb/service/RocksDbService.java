@@ -11,11 +11,14 @@ import org.springframework.util.SerializationUtils;
 import ru.pandahouse.eulerdb.repository.KVRepository;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class RocksDbService implements KVRepository<String, Object> {
+public class RocksDbService implements KVRepository<byte[], byte[]> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RocksDbService.class);
 
@@ -32,58 +35,60 @@ public class RocksDbService implements KVRepository<String, Object> {
     }
 
     @Override
-    public boolean save(String key, Object value) {
-        LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]---", value, key);
+    public boolean save(byte[] key, byte[] value) {
+        LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]",
+                new String(value), new String(key));
         try{
-            rocksDB.put(key.getBytes(), SerializationUtils.serialize(value));
+            rocksDB.put(key, value);
         } catch(RocksDBException e){
-            LOGGER.error("---[ERROR] PUT error. Cause: {} , message: {}---", e.getCause(), e.getMessage());
+            LOGGER.error("---[ERROR] PUT error. Cause: {} , message: {}", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
         }
         return true;
     }
 
     @Override
-    public Optional<List<Object>> find(String key) {
-        List<Object> value = new LinkedList<>();
-        LOGGER.info("---[DB] Operation GET. Key: [{}].", key);
+    public Optional<byte[]> find(byte[] key) {
+        byte[] value = new byte[0];
+        LOGGER.info("---[DB] Operation GET. Key: [{}].", new String(key));
         try {
-            byte[] bytes = rocksDB.get(key.getBytes(StandardCharsets.UTF_8));
-            if (bytes != null) value = new LinkedList<>(List.of(Objects.requireNonNull(SerializationUtils.deserialize(bytes))));
-            LOGGER.info("---[DB] GET value {} with key [{}].", value, key);
+            byte[] bytes = rocksDB.get(key);
+            if (bytes != null){
+                value = bytes;
+                LOGGER.info("---[DB] GET value [{}] with key [{}].", new String(value),new String(key));
+            }
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] GET error. Cause: {} , message: [{}].", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
         }
-        return value.stream().findAny().isPresent() ? Optional.of(value) : Optional.empty();
+        return value.length == 0 ? Optional.of(value) : Optional.empty();
     }
 
     @Override
-    public boolean delete(String key) {
+    public boolean delete(byte[] key) {
         LOGGER.info("---[DB] Operation DELETE. Key: [{}].", key);
         try {
-            rocksDB.delete(key.getBytes(StandardCharsets.UTF_8));
-            LOGGER.info("---[DB] DELETE value with key [{}].", key);
+            rocksDB.delete(key);
+            LOGGER.info("---[DB] DELETE value with key [{}].", new String(key));
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] DELETE error. Cause: [{}] , message: [{}].", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
         }
         return true;
     }
-    @Override
-    public boolean add(String key, Object value) {
-        LOGGER.info("---[DB] Operation ADD. Key: [{}], value [{}]", key, value);
+    /*@Override
+    public boolean add(byte[] key, byte[] value) {
+        LOGGER.info("---[DB] Operation ADD. Key: [{}], value [{}]", new String(key), SerializationUtils.deserialize(value));
         return addValue(key, value);
-    }
+    }*/
 
-    public Optional<List<Object>> findMultipleValues(List<String> keyList) {
-        List<Object> valueList = new ArrayList<>();
-        List<byte[]> keyByteList = keyList.stream().map(i -> i.getBytes(StandardCharsets.UTF_8)).collect(Collectors.toList());
+    public Optional<List<byte[]>> findMultipleValues(List<byte[]> keyList) {
+        List<byte[]> valueList = new ArrayList<>();
         LOGGER.info("---[DB] Operation GET WITH MULTIPLE KEYS. Key list: {}.", keyList);
         try {
-            List<byte[]> valueByteList = rocksDB.multiGetAsList(keyByteList);
+            List<byte[]> valueByteList = rocksDB.multiGetAsList(keyList);
             if (!valueByteList.isEmpty()) {
-                valueList = valueByteList.stream().map(SerializationUtils::deserialize).collect(Collectors.toList());
+                valueList = valueByteList;
             }
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] GET WITH MULTIPLE KEYS error. Cause: {} , message: {}---", e.getCause(), e.getMessage());
@@ -94,10 +99,10 @@ public class RocksDbService implements KVRepository<String, Object> {
     }
 
     //Удаляет в диапазоне [beginKey, endKey), не включая значения endKey
-    public boolean deleteMultipleKeys(String beginKey, String endKey) {
+    public boolean deleteMultipleKeys(byte[] beginKey, byte[] endKey) {
         LOGGER.info("---[DB] Operation DELETE WITH MULTIPLE KEYS. Begin key: [{}], end key (not included)   : [{}]", beginKey, endKey);
         try {
-            rocksDB.deleteRange(beginKey.getBytes(), endKey.getBytes());
+            rocksDB.deleteRange(beginKey, endKey);
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] DELETE WITH MULTIPLE KEYS error. Cause: {} , message: {}.", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
@@ -105,15 +110,15 @@ public class RocksDbService implements KVRepository<String, Object> {
         return true;
     }
 
-    public boolean saveColumnFamily(String columnFamilyHandleName, String key, Object value) {
+    public boolean saveColumnFamily(String columnFamilyHandleName, byte[] key, byte[] value) {
         ColumnFamilyHandle columnFamilyHandle = getColumnFamilyHandleByName(columnFamilyHandleName.getBytes(StandardCharsets.UTF_8));
         if (columnFamilyHandle == null) {
             LOGGER.error("---[ERROR] ColumnFamilyHandle with name [{}] didn't find.", columnFamilyHandleName);
             return false;
         }
         try {
-            rocksDB.put(columnFamilyHandle, key.getBytes(StandardCharsets.UTF_8), SerializationUtils.serialize(value));
-            LOGGER.info("---[DB] PUT value [{}] with key [{}] in ColumnFamily [{}].", value, key, columnFamilyHandleName);
+            rocksDB.put(columnFamilyHandle, key, value);
+            LOGGER.info("---[DB] PUT value [{}] with key [{}] in ColumnFamily [{}].", SerializationUtils.deserialize(value), new String(key), columnFamilyHandleName);
             return true;
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] ColFam PUT ERROR. Cause: [{}], message: [{}].", e.getCause(), e.getMessage());
@@ -121,14 +126,14 @@ public class RocksDbService implements KVRepository<String, Object> {
         }
     }
 
-    public Object findColumnFamilyValue(String columnFamilyHandleName, String key) {
+    public Optional<byte[]> findColumnFamilyValue(String columnFamilyHandleName, byte[] key) {
         ColumnFamilyHandle columnFamilyHandle = getColumnFamilyHandleByName(columnFamilyHandleName.getBytes(StandardCharsets.UTF_8));
+        byte[] resultByte = null;
         Object result = new Object();
         try {
-            byte[] resultByte = rocksDB.get(columnFamilyHandle, key.getBytes());
-            if (resultByte != null) {
-                LOGGER.info("---[DB] GET value [{}] with key [{}] from ColumnFamily [{}].", SerializationUtils.deserialize(resultByte), key, columnFamilyHandleName);
-                result = SerializationUtils.deserialize(resultByte);
+            resultByte = rocksDB.get(columnFamilyHandle, key);
+            if (resultByte!=null) {
+                LOGGER.info("---[DB] GET value [{}] with key [{}] from ColumnFamily [{}].", SerializationUtils.deserialize(resultByte), new String(key), columnFamilyHandleName);
             } else {
                 LOGGER.info("---[DB] Value with such key didn't find.---");
             }
@@ -136,13 +141,13 @@ public class RocksDbService implements KVRepository<String, Object> {
             LOGGER.error("---[ERROR] ColFam GET ERROR. Cause: [{}], message: [{}].", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
         }
-        return result;
+        return resultByte == null ? Optional.empty() : Optional.of(resultByte);
     }
 
-    public boolean deleteColumnFamilyValue(String columnFamilyHandleName, String key) {
+    public boolean deleteColumnFamilyValue(String columnFamilyHandleName, byte[] key) {
         ColumnFamilyHandle columnFamilyHandle = getColumnFamilyHandleByName(columnFamilyHandleName.getBytes());
         try {
-            rocksDB.delete(columnFamilyHandle, key.getBytes(StandardCharsets.UTF_8));
+            rocksDB.delete(columnFamilyHandle, key);
             LOGGER.info("---[DB] DELETE value with key [{}] from ColumnFamily [{}].", key, columnFamilyHandleName);
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] ColFam DELETE error. Cause: [{}], message: [{}].", e.getCause(), e.getMessage());
@@ -151,14 +156,14 @@ public class RocksDbService implements KVRepository<String, Object> {
         return true;
     }
 
-    public Optional<List<Object>> findMultipleColumnFamilyValues(List<String> keyList) {
-        List<byte[]> keyByteList = keyList.stream().map(String::getBytes).collect(Collectors.toList());
-        List<Object> resultValueList = new ArrayList<>();
+    public Optional<List<byte[]>> findMultipleColumnFamilyValues(List<byte[]> keyList) {
+        List<byte[]> resultValueList = new ArrayList<>();
         LOGGER.info("---[DB] Operation ColFam GET WITH MULTIPLE KEYS. Key list: {}.", keyList);
         try {
-            List<byte[]> byteValueList = rocksDB.multiGetAsList(columnFamilyHandleList, keyByteList);
+            List<byte[]> byteValueList = rocksDB.multiGetAsList(columnFamilyHandleList, keyList);
             if (!byteValueList.isEmpty()) {
-                resultValueList = byteValueList.stream().map(SerializationUtils::deserialize).collect(Collectors.toList());
+                LOGGER.info("---[DB] ColFam findMulti values [{}] in ColumnFamilies", byteValueList.stream().map(SerializationUtils::deserialize).collect(Collectors.toList()));
+                resultValueList = byteValueList;
             }
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] ColFam MULTIPLE GET error. Cause: [{}], message [{}].", e.getCause(), e.getMessage());
@@ -168,10 +173,10 @@ public class RocksDbService implements KVRepository<String, Object> {
         return resultValueList.isEmpty() ? Optional.empty() : Optional.of(resultValueList);
     }
 
-    public boolean deleteMultipleColumnFamilyValues(String columnFamilyHandleName, String beginKey, String endKey) {
+    public boolean deleteMultipleColumnFamilyValues(String columnFamilyHandleName, byte[] beginKey, byte[] endKey) {
         ColumnFamilyHandle columnFamilyHandle = getColumnFamilyHandleByName(columnFamilyHandleName.getBytes());
         try {
-            rocksDB.deleteRange(columnFamilyHandle, beginKey.getBytes(), endKey.getBytes());
+            rocksDB.deleteRange(columnFamilyHandle, beginKey, endKey);
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] ColFam MULTIPLE DELETE error. Cause: [{}] , message: [{}].", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
@@ -179,41 +184,41 @@ public class RocksDbService implements KVRepository<String, Object> {
         return true;
     }
 
-    public void mergeTest(String key, Object value) {
+    public void mergeTest(byte[] key, byte[] value) {
         try {
             LOGGER.info("---MERGE TEST---");
-            Optional<List<Object>> valueList = find(key);
-            if (valueList.isPresent()) {
-                LOGGER.info("---Values before: {} ", valueList);
+            Optional<byte[]> valueOpt = find(key);
+            if (valueOpt.isPresent()) {
+                LOGGER.info("---Values before: {} ", SerializationUtils.deserialize(valueOpt.get()));
             }
-            rocksDB.merge(key.getBytes(), SerializationUtils.serialize(value));
+            rocksDB.merge(key, value);
             LOGGER.info("---MERGED VALUES---");
-            valueList = find(key);
-            if (valueList.isPresent()) {
-                LOGGER.info("---Values after: {}", valueList);
+            valueOpt = find(key);
+            if (valueOpt.isPresent()) {
+                LOGGER.info("---Values after: {}", valueOpt);
             }
         } catch (RocksDBException e) {
             throw new RuntimeException(e);
         }
     }
 
-    private boolean addValue(String key, Object value) {
-        List<Object> valueList = new LinkedList<>();
-        Optional<List<Object>> findResult = find(key);
+    /*private boolean addValue(byte[] key, byte[] value) {
+        List<byte[]> valueList = new ArrayList<>();
+        Optional<byte[]> findResult = find(key);
         if (findResult.isPresent()) {
             valueList = findResult.get();
         }
-        boolean present = valueList.stream().anyMatch(i -> i.equals(value));
+        boolean present = valueList.stream().anyMatch(i -> Arrays.equals(i, value));
         if (!present) valueList.add(value);
         try {
-            rocksDB.put(key.getBytes(), SerializationUtils.serialize(valueList));
-            LOGGER.info("---[DB] Values: [{}].", valueList);
+            rocksDB.put(key, SerializationUtils.serialize(valueList));
+            LOGGER.info("---[DB] Values: {}.", valueList.stream().map(SerializationUtils::deserialize).collect(Collectors.toList()));
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] ADD error. Cause: [{}] , message: [{}].", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
         }
         return true;
-    }
+    }*/
     private ColumnFamilyHandle getColumnFamilyHandleByName(byte[] name) {
         return columnFamilyHandleList
                 .stream()

@@ -55,6 +55,7 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
             LOGGER.error("---[ERROR] GET error. Cause: {} , message: [{}].", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
         }
+        if(value.length == 0) LOGGER.info("---[WARN] Didn't find any value with such key...");
         return value.length == 0 ? Optional.of(value) : Optional.empty();
     }
     @Override
@@ -76,6 +77,7 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
             String[] resultString = new String(rocksDB.get(key)).split(", ");
             Optional<String> isNew = Arrays.stream(resultString).filter(i -> i.equals(new String(value))).findAny();
             if(isNew.isPresent()){
+                LOGGER.warn("---[WARN] Such value is on the database. Rollback operation...");
                 return false;
             }
             rocksDB.merge(key, value);

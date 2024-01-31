@@ -3,8 +3,10 @@ package ru.pandahouse.eulerdb.controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
+import ru.pandahouse.eulerdb.configuration.GFParse;
 import ru.pandahouse.eulerdb.service.RocksDbService;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
@@ -12,11 +14,14 @@ import java.util.List;
 public class IndexController {
 
     private final RocksDbService rocksDbService;
+    private final GFParse gfParse;
 
     public IndexController(
-        RocksDbService rocksDbService
+        RocksDbService rocksDbService,
+        GFParse gfParse
     ) {
         this.rocksDbService = rocksDbService;
+        this.gfParse = gfParse;
     }
 
     @GetMapping("/put/{key}/{value}")
@@ -57,7 +62,7 @@ public class IndexController {
     public void addColumnFamilyData(@PathVariable("name") String name,
                                     @PathVariable("key") String key,
                                     @PathVariable("value") String value){
-        rocksDbService.addColumnFamilyValueByKey(name,key.getBytes(),value.getBytes());
+        rocksDbService.addColumnFamilyValue(name,key.getBytes(),value.getBytes());
     }
     @GetMapping("/col/find")
     public void multipleColFindTest(){
@@ -75,5 +80,13 @@ public class IndexController {
     @GetMapping("/delMulti")
     public void delMultiByKeyList(){
         rocksDbService.deleteMultipleKeys("1111".getBytes(), "3333".getBytes());
+    }
+    @GetMapping("/readFile")
+    public void readFile(){
+        try{
+            gfParse.parseFile(GFParse.PATH_TO_FILE);
+        } catch (IOException e){
+            throw new RuntimeException(e);
+        }
     }
 }

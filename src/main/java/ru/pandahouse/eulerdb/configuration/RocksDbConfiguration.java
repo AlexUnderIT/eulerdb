@@ -49,8 +49,7 @@ public class RocksDbConfiguration {
     public List<ColumnFamilyDescriptor> cfDescriptors(ColumnFamilyOptions columnFamilyOptions) {
         return Arrays.asList(
                 new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY, columnFamilyOptions),
-                new ColumnFamilyDescriptor("metadata".getBytes(StandardCharsets.UTF_8), columnFamilyOptions),
-                new ColumnFamilyDescriptor("index_to_hash".getBytes(StandardCharsets.UTF_8), columnFamilyOptions)
+                new ColumnFamilyDescriptor("metadata".getBytes(StandardCharsets.UTF_8), columnFamilyOptions)
         );
     }
 

@@ -51,19 +51,19 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
     @Override
     public Optional<byte[]> find(byte[] key) {
         byte[] value = new byte[0];
-        LOGGER.info("---[DB] Operation GET. Key: [{}].", new String(key));
+        //LOGGER.info("---[DB] Operation GET. Key: [{}].", new String(key));
         try {
             byte[] bytes = rocksDB.get(key);
             if (bytes != null) {
                 value = bytes;
-                LOGGER.info("---[DB] GET value [{}] with key [{}].", new String(value), new String(key));
+                //.info("---[DB] GET value [{}] with key [{}].", new String(value), new String(key));
             }
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] GET error. Cause: {} , message: [{}].", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
         }
         if (value.length == 0) LOGGER.info("---[WARN] Didn't find any value with such key...");
-        return value.length == 0 ? Optional.of(value) : Optional.empty();
+        return value.length != 0 ? Optional.of(value) : Optional.empty();
     }
 
     @Override

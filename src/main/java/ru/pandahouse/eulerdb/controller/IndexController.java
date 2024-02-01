@@ -1,10 +1,13 @@
 package ru.pandahouse.eulerdb.controller;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import ru.pandahouse.eulerdb.configuration.GFParse;
 import ru.pandahouse.eulerdb.service.RocksDbService;
+import ru.pandahouse.eulerdb.traversal.BreadthFirstSearchAlgo;
+import ru.pandahouse.eulerdb.traversal.DepthFirstSearchAlgo;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -15,13 +18,20 @@ public class IndexController {
 
     private final RocksDbService rocksDbService;
     private final GFParse gfParse;
+    private final BreadthFirstSearchAlgo breadthFirstSearchAlgo;
+    private final DepthFirstSearchAlgo depthFirstSearchAlgo;
 
+    @Autowired
     public IndexController(
         RocksDbService rocksDbService,
-        GFParse gfParse
+        GFParse gfParse,
+        BreadthFirstSearchAlgo breadthFirstSearchAlgo,
+        DepthFirstSearchAlgo depthFirstSearchAlgo
     ) {
         this.rocksDbService = rocksDbService;
         this.gfParse = gfParse;
+        this.breadthFirstSearchAlgo = breadthFirstSearchAlgo;
+        this.depthFirstSearchAlgo = depthFirstSearchAlgo;
     }
 
     @GetMapping("/put/{key}/{value}")
@@ -84,5 +94,13 @@ public class IndexController {
     @GetMapping("/readFile")
     public void readFile(){
         gfParse.parseFile(GFParse.PATH_TO_FILE);
+    }
+    @GetMapping("/bfs/{key}")
+    public void bfsTest(@PathVariable("key") String startKey){
+        breadthFirstSearchAlgo.allGraphBfsTraversal(startKey);
+    }
+    @GetMapping("/dfs/{key}")
+    public void dfsTest(@PathVariable("key") String startKey){
+        depthFirstSearchAlgo.allGraphDfsTraversal(startKey);
     }
 }

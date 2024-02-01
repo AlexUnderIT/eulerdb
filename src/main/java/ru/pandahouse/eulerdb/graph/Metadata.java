@@ -14,15 +14,23 @@ public class Metadata implements Serializable {
     * parents: "41276e25e2803a6b2d7a634100e590eb2f2f5307"
     * }
     */
-    private Long nodeId;
+    private String shortHash;
     private String authorId;
     private String authorEmail;
-
-    private Long parentNodeId;
     private String title;
+
 
     public Metadata setTitle(String title) {
         this.title = title;
+        return this;
+    }
+
+    public String getShortHash() {
+        return shortHash;
+    }
+
+    public Metadata setShortHash(String shortHash) {
+        this.shortHash = shortHash;
         return this;
     }
 
@@ -39,14 +47,6 @@ public class Metadata implements Serializable {
         return authorId;
     }
 
-    public Metadata setNodeId(Long nodeId) {
-        this.nodeId = nodeId;
-        return this;
-    }
-
-    public Long getNodeId() {
-        return nodeId;
-    }
     public Metadata setAuthorEmail(String authorEmail) {
         this.authorEmail = authorEmail;
         return this;
@@ -56,22 +56,12 @@ public class Metadata implements Serializable {
         return authorEmail;
     }
 
-    public Metadata setParentNodeId(Long parentNodeId) {
-        this.parentNodeId = parentNodeId;
-        return this;
-    }
-
-    public Long getParentNodeId() {
-        return parentNodeId;
-    }
-
     @Override
     public String toString() {
         return "Metadata: [" +
-                "nodeId = " + nodeId +
-                ", authorId = '" + authorId + '\'' +
+                "shortHash = '" + shortHash + '\'' +
+                "authorId = '" + authorId + '\'' +
                 ", authorEmail = '" + authorEmail + '\'' +
-                ", parentNodeId = " + parentNodeId +
                 ", title = '" + title + '\'' +
                 ']';
     }

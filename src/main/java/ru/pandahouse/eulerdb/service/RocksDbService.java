@@ -8,12 +8,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.SerializationUtils;
-import ru.pandahouse.eulerdb.graph.Metadata;
+import ru.pandahouse.eulerdb.exceptions.ColumnFamilyNotFoundException;
 import ru.pandahouse.eulerdb.repository.KVRepository;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -81,18 +78,20 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
         }
         return true;
     }
-    //TODO: пофиксить WARN для ненахождения результата и SAVE вместо ADD
     @Override
     public boolean add(byte[] key, byte[] value) {
         try {
             LOGGER.info("---[DB] Operation ADD. Key: [{}], value: [{}]", new String(key), new String(value));
-            String[] resultString = new String(rocksDB.get(key)).split(", ");
-            Optional<String> isNew = Arrays.stream(resultString).filter(i -> i.equals(new String(value))).findAny();
-            if (isNew.isPresent()) {
-                LOGGER.warn("---[WARN] Such value is on the database. Rollback operation...");
-                return false;
+            byte[] resultByte = rocksDB.get(key);
+            if(resultByte != null){
+                String[] resultString = new String(rocksDB.get(key)).split(", ");
+                Optional<String> isNotNew = Arrays.stream(resultString).filter(i -> i.equals(new String(value))).findAny();
+                if (isNotNew.isPresent()) {
+                    LOGGER.warn("---[WARN] Such value is on the database. Rollback operation...");
+                    return false;
+                }
             }
-            if(resultString.length == 0){
+            else {
                 LOGGER.warn("---[WARN] There is no values with such key. Making SAVE instead of ADD.");
                 this.save(key, value);
                 return true;
@@ -192,8 +191,8 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
         return true;
     }
 
-    //Чтобы работал надо подавать ключи в том же порядке, что и список колонок, иначе
-    //не работает, т.е. первый ключ должен быть в первой по списку колонке.
+    //Чтобы работал надо подавать ключи в том же порядке, что и список колонок,
+    //иначе не работает, т.е. первый ключ должен быть в первой по списку колонке.
     public Optional<List<byte[]>> findMultipleColumnFamilyValues(List<byte[]> keyList) {
         List<byte[]> resultValueList = new ArrayList<>();
         List<String> keyStringList = keyList.stream().map(String::new).collect(Collectors.toList());
@@ -239,6 +238,6 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
                             }
                         })
                 .findAny()
-                .orElse(null);
+                .orElseThrow(ColumnFamilyNotFoundException::new);
     }
 }

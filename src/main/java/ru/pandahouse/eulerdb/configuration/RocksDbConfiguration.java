@@ -58,7 +58,8 @@ public class RocksDbConfiguration {
 
         dbOptions = new DBOptions()
                 .setCreateIfMissing(true)
-                .setCreateMissingColumnFamilies(true);
+                .setCreateMissingColumnFamilies(true)
+                .setAtomicFlush(true);
         return dbOptions;
     }
 

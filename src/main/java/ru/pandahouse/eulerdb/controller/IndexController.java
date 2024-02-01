@@ -83,10 +83,6 @@ public class IndexController {
     }
     @GetMapping("/readFile")
     public void readFile(){
-        try{
-            gfParse.parseFile(GFParse.PATH_TO_FILE);
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
+        gfParse.parseFile(GFParse.PATH_TO_FILE);
     }
 }

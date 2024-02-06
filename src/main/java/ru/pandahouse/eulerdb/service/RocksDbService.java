@@ -24,8 +24,6 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
     private final RocksDB rocksDB;
     private final List<ColumnFamilyHandle> columnFamilyHandleList;
 
-    public static final String PATH_TO_FILE = "/home/alexunderit/IdeaProjects/RepoProjects/eulerdb/test10.txt";
-
     @Autowired
     public RocksDbService(
             RocksDB rocksDB,
@@ -51,12 +49,12 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
     @Override
     public Optional<byte[]> find(byte[] key) {
         byte[] value = new byte[0];
-        //LOGGER.info("---[DB] Operation GET. Key: [{}].", new String(key));
+        LOGGER.info("---[DB] Operation GET. Key: [{}].", new String(key));
         try {
             byte[] bytes = rocksDB.get(key);
             if (bytes != null) {
                 value = bytes;
-                //.info("---[DB] GET value [{}] with key [{}].", new String(value), new String(key));
+                LOGGER.info("---[DB] GET value [{}] with key [{}].", new String(value), new String(key));
             }
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] GET error. Cause: {} , message: [{}].", e.getCause(), e.getMessage());
@@ -204,7 +202,7 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
                 resultValueList = byteValueList;
             }
         } catch (RocksDBException e) {
-            LOGGER.error("---[ERROR] ColFam MULTIPLE GET error. Cause: [{}], message [{}].", e.getCause(), e.getMessage());
+                LOGGER.error("---[ERROR] ColFam MULTIPLE GET error. Cause: [{}], message [{}].", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
         }
         List<String> valueStringList = resultValueList.stream()

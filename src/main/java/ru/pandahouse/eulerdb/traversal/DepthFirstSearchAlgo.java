@@ -24,9 +24,12 @@ public class DepthFirstSearchAlgo {
     public void allGraphDfsTraversal(String startNode){
         List<String> visited = new ArrayList<>();
         COUNTER = 1;
+        long startTime = System.currentTimeMillis();
         LOGGER.info("---START GRAPH DFS TRAVERSAL---");
         dfs(startNode, visited);
+        long endTime = System.currentTimeMillis();
         LOGGER.info("---END GRAPH DFS TRAVERSAL---");
+        LOGGER.info("TOTAL TIME TO DFS TRAVERSE: {}", endTime - startTime);
     }
     public void dfs(String node, List<String> visited){
         List<String> neighbourNodes = Collections.emptyList();

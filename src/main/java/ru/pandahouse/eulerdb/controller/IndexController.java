@@ -103,4 +103,8 @@ public class IndexController {
     public void dfsTest(@PathVariable("key") String startKey){
         depthFirstSearchAlgo.allGraphDfsTraversal(startKey);
     }
+    @GetMapping("stats")
+    public void getStats(){
+        rocksDbService.getStatistic();
+    }
 }

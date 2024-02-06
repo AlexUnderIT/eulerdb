@@ -35,6 +35,7 @@ public class RocksDbConfiguration {
         long startMillis = System.currentTimeMillis();
         try {
             db = RocksDB.open(dbOptions, dbDir.getAbsolutePath(),cfDescriptors,columnFamilyHandleList);
+            //db.setPerfLevel(PerfLevel.ENABLE_TIME);
         } catch (RocksDBException e) {
             LOGGER.error(e.getMessage());
         }
@@ -44,7 +45,6 @@ public class RocksDbConfiguration {
 
         return db;
     }
-
     @Bean
     public List<ColumnFamilyDescriptor> cfDescriptors(ColumnFamilyOptions columnFamilyOptions) {
         return Arrays.asList(
@@ -52,17 +52,21 @@ public class RocksDbConfiguration {
                 new ColumnFamilyDescriptor("metadata".getBytes(StandardCharsets.UTF_8), columnFamilyOptions)
         );
     }
-
     @Bean
-    public DBOptions dbOptions() {
-
+    public DBOptions dbOptions(SstFileManager sstFileManager, Statistics statistics) throws RocksDBException{
         dbOptions = new DBOptions()
                 .setCreateIfMissing(true)
                 .setCreateMissingColumnFamilies(true)
-                .setAtomicFlush(true);
+                .setAtomicFlush(true)
+                .setSstFileManager(sstFileManager)
+                .setStatistics(statistics);
         return dbOptions;
     }
-
+    @Bean
+    public SstFileManager sstFileManager() throws RocksDBException{
+        SstFileManager sstFileManager = new SstFileManager(Env.getDefault());
+        return sstFileManager;
+    }
     @Bean
     public ColumnFamilyOptions columnFamilyOptions() {
         cfOpts = new ColumnFamilyOptions()
@@ -70,18 +74,22 @@ public class RocksDbConfiguration {
                 .setMergeOperator(new StringAppendOperator(", "));
         return cfOpts;
     }
-
     @Bean
     @Qualifier("columnFamilies")
     public List<ColumnFamilyHandle> columnFamilyConfig() {
         columnFamilyHandleList = new ArrayList<>();
         return columnFamilyHandleList;
     }
+    @Bean
+    public Statistics statistics(){
+        return new Statistics();
+    }
     @PreDestroy
     public void closeConnections() {
         for (final ColumnFamilyHandle columnFamilyHandle : columnFamilyHandleList) {
             columnFamilyHandle.close();
         }
+        db.setPerfLevel(PerfLevel.DISABLE);
         dbOptions.close();
         cfOpts.close();
         LOGGER.info("----[CLOSE DATABASE]----");

@@ -1,8 +1,6 @@
 package ru.pandahouse.eulerdb.service;
 
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
+import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,14 +21,15 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
 
     private final RocksDB rocksDB;
     private final List<ColumnFamilyHandle> columnFamilyHandleList;
+    private final DBOptions dbOptions;
+    private final SstFileManager sstFileManager;
 
     @Autowired
-    public RocksDbService(
-            RocksDB rocksDB,
-            List<ColumnFamilyHandle> columnFamilyHandleList
-    ) {
+    public RocksDbService(RocksDB rocksDB, List<ColumnFamilyHandle> columnFamilyHandleList, DBOptions dbOptions, SstFileManager sstFileManager) {
         this.rocksDB = rocksDB;
         this.columnFamilyHandleList = columnFamilyHandleList;
+        this.dbOptions = dbOptions;
+        this.sstFileManager = sstFileManager;
     }
 
     @Override
@@ -237,5 +236,27 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
                         })
                 .findAny()
                 .orElseThrow(ColumnFamilyNotFoundException::new);
+    }
+    public void getStatistic(){
+        /*try {*/
+        LOGGER.info("----DATABASE STATISTIC----");
+
+        Snapshot currentSnapshot = rocksDB.getSnapshot();
+        LOGGER.info("-[STATS] Snapshot sequence num: {}", currentSnapshot.getSequenceNumber());
+        rocksDB.releaseSnapshot(currentSnapshot);
+        LOGGER.info("-[STATS] Hits to memtable during this session: {}", dbOptions.statistics().getTickerCount(TickerType.MEMTABLE_HIT));
+        LOGGER.info("-[STATS] Get count this session: \n{}", dbOptions.statistics().getHistogramString(HistogramType.DB_GET));
+        LOGGER.info("-[STATS] Total disk usage by DB: {} bytes, or {} mb", sstFileManager.getTotalSize(), sstFileManager.getTotalSize() / (1024 * 1024));
+        Map<String, Long> sstFileMap =  sstFileManager.getTrackedFiles();
+        LOGGER.info("-[STATS] Tracked SST files are: {}", sstFileMap.toString());
+
+        LOGGER.info("-[NWSTATS] Time spent in MergeOperator (nanos): {}", rocksDB.getPerfContext().getMergeOperatorTimeNanos());
+        LOGGER.info("-[NWSTATS] Time to read from memtable (nanos): {}", rocksDB.getPerfContext().getFromMemtableTime());
+        LOGGER.info("-[NWSTATS] Number of memtables queried: {}", rocksDB.getPerfContext().getFromMemtableCount());
+        LOGGER.info("-[NWSTATS] Total nanos spent after Get() finds a key {} ", rocksDB.getPerfContext().getPostProcessTime());
+        /*} catch (RocksDBException e){
+            LOGGER.error("--[ERROR] Cause: {}, message: {}.", e.getCause(), e.getMessage());
+            throw new RuntimeException(e);
+        }*/
     }
 }

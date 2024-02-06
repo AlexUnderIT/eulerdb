@@ -12,21 +12,23 @@ import java.util.stream.Collectors;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
-public class DepthFirstSearchAlgo {
+public class DepthFirstSearchAlgo extends TraversalAlgorithm{
     private static final Logger LOGGER = LoggerFactory.getLogger(DepthFirstSearchAlgo.class);
     private final RocksDbService rocksDbService;
-    private static int COUNTER;
 
     @Autowired
     public DepthFirstSearchAlgo(RocksDbService rocksDbService) {
         this.rocksDbService = rocksDbService;
     }
     public void allGraphDfsTraversal(String startNode){
+        COUNTER = 0;
         List<String> visited = new ArrayList<>();
-        COUNTER = 1;
+
         long startTime = System.currentTimeMillis();
         LOGGER.info("---START GRAPH DFS TRAVERSAL---");
+
         dfs(startNode, visited);
+
         long endTime = System.currentTimeMillis();
         LOGGER.info("---END GRAPH DFS TRAVERSAL---");
         LOGGER.info("TOTAL TIME TO DFS TRAVERSE: {}", endTime - startTime);
@@ -51,11 +53,5 @@ public class DepthFirstSearchAlgo {
                 }
             }
         }
-    }
-    private List<String> getNeighboursWithoutPrefix(byte[] neighboursByte){
-        String[] parseToString = new String(neighboursByte).split(", ");
-        return Arrays
-                .stream(parseToString)
-                .map(i -> i.substring(1)).collect(Collectors.toList());
     }
 }

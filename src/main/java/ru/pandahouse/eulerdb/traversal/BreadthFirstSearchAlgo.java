@@ -14,7 +14,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 Class, that implements BFS algorithm
 */
 @Component
-public class BreadthFirstSearchAlgo {
+public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
     private static final Logger LOGGER = LoggerFactory.getLogger(BreadthFirstSearchAlgo.class);
     private final RocksDbService rocksDbService;
 
@@ -24,12 +24,13 @@ public class BreadthFirstSearchAlgo {
     }
 
     public void allGraphBfsTraversal(String startNode) {
-        long startMillis = System.currentTimeMillis();
         List<String> neighbourNodes = Collections.emptyList();
         Queue<String> queue = new LinkedList<>();
-        LOGGER.info("---START GRAPH BFS TRAVERSAL---");
+        COUNTER = 0;
         List<String> visited = new ArrayList<>();
-        int COUNTER = 1;
+
+        long startMillis = System.currentTimeMillis();
+        LOGGER.info("---START GRAPH BFS TRAVERSAL---");
 
         queue.add(startNode);
         visited.add(startNode);
@@ -56,12 +57,6 @@ public class BreadthFirstSearchAlgo {
         long endMillis = System.currentTimeMillis();
         LOGGER.info("---END GRAPH BFS TRAVERSAL---");
         LOGGER.info("TOTAL TIME TO TRAVERSE: {}", endMillis-startMillis);
-    }
-    private List<String> getNeighboursWithoutPrefix(byte[] neighboursByte){
-        String[] parseToString = new String(neighboursByte).split(", ");
-        return Arrays
-                .stream(parseToString)
-                .map(i -> i.substring(1)).collect(Collectors.toList());
     }
 
 }

@@ -60,7 +60,7 @@ public class Metadata implements Serializable {
     public String toString() {
         return "Metadata: [" +
                 "shortHash = '" + shortHash + '\'' +
-                "authorId = '" + authorId + '\'' +
+                ", authorId = '" + authorId + '\'' +
                 ", authorEmail = '" + authorEmail + '\'' +
                 ", title = '" + title + '\'' +
                 ']';

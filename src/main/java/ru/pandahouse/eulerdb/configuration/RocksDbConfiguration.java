@@ -35,7 +35,6 @@ public class RocksDbConfiguration {
         long startMillis = System.currentTimeMillis();
         try {
             db = RocksDB.open(dbOptions, dbDir.getAbsolutePath(),cfDescriptors,columnFamilyHandleList);
-            //db.setPerfLevel(PerfLevel.ENABLE_TIME);
         } catch (RocksDBException e) {
             LOGGER.error(e.getMessage());
         }
@@ -64,8 +63,7 @@ public class RocksDbConfiguration {
     }
     @Bean
     public SstFileManager sstFileManager() throws RocksDBException{
-        SstFileManager sstFileManager = new SstFileManager(Env.getDefault());
-        return sstFileManager;
+        return new SstFileManager(Env.getDefault());
     }
     @Bean
     public ColumnFamilyOptions columnFamilyOptions() {
@@ -82,14 +80,15 @@ public class RocksDbConfiguration {
     }
     @Bean
     public Statistics statistics(){
-        return new Statistics();
+        Statistics statistic = new Statistics();
+        statistic.setStatsLevel(StatsLevel.ALL);
+        return statistic;
     }
     @PreDestroy
     public void closeConnections() {
         for (final ColumnFamilyHandle columnFamilyHandle : columnFamilyHandleList) {
             columnFamilyHandle.close();
         }
-        db.setPerfLevel(PerfLevel.DISABLE);
         dbOptions.close();
         cfOpts.close();
         LOGGER.info("----[CLOSE DATABASE]----");

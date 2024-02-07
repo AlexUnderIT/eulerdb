@@ -238,25 +238,26 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
                 .orElseThrow(ColumnFamilyNotFoundException::new);
     }
     public void getStatistic(){
-        /*try {*/
+        try {
         LOGGER.info("----DATABASE STATISTIC----");
 
         Snapshot currentSnapshot = rocksDB.getSnapshot();
         LOGGER.info("-[STATS] Snapshot sequence num: {}", currentSnapshot.getSequenceNumber());
         rocksDB.releaseSnapshot(currentSnapshot);
-        LOGGER.info("-[STATS] Hits to memtable during this session: {}", dbOptions.statistics().getTickerCount(TickerType.MEMTABLE_HIT));
-        LOGGER.info("-[STATS] Get count this session: \n{}", dbOptions.statistics().getHistogramString(HistogramType.DB_GET));
-        LOGGER.info("-[STATS] Total disk usage by DB: {} bytes, or {} mb", sstFileManager.getTotalSize(), sstFileManager.getTotalSize() / (1024 * 1024));
-        Map<String, Long> sstFileMap =  sstFileManager.getTrackedFiles();
-        LOGGER.info("-[STATS] Tracked SST files are: {}", sstFileMap.toString());
 
-        LOGGER.info("-[NWSTATS] Time spent in MergeOperator (nanos): {}", rocksDB.getPerfContext().getMergeOperatorTimeNanos());
-        LOGGER.info("-[NWSTATS] Time to read from memtable (nanos): {}", rocksDB.getPerfContext().getFromMemtableTime());
-        LOGGER.info("-[NWSTATS] Number of memtables queried: {}", rocksDB.getPerfContext().getFromMemtableCount());
-        LOGGER.info("-[NWSTATS] Total nanos spent after Get() finds a key {} ", rocksDB.getPerfContext().getPostProcessTime());
-        /*} catch (RocksDBException e){
+        LOGGER.info("-[STATS] Hits to memtable during this session: {}.", dbOptions.statistics().getTickerCount(TickerType.MEMTABLE_HIT));
+        LOGGER.info("-[STATS] Number of seek to db and returns: {}.", dbOptions.statistics().getTickerCount(TickerType.NUMBER_DB_SEEK_FOUND));
+        LOGGER.info("-[STATS] WAL written by {} bytes.", dbOptions.statistics().getTickerCount(TickerType.WRITE_WITH_WAL));
+
+        LOGGER.info("-[STATS] Total disk usage by DB: {} bytes, or {} mb.", sstFileManager.getTotalSize(), sstFileManager.getTotalSize() / (1024 * 1024));
+        Map<String, Long> sstFileMap =  sstFileManager.getTrackedFiles();
+        LOGGER.info("-[STATS] Tracked SST files are: {}.", sstFileMap.toString());
+
+        //Что каждая строчка значит: https://github.com/facebook/rocksdb/wiki/Compaction-Stats-and-DB-Status
+        LOGGER.info("-[STATS] RocksDB stats: \n{}", rocksDB.getProperty("rocksdb.stats"));
+        } catch (RocksDBException e){
             LOGGER.error("--[ERROR] Cause: {}, message: {}.", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
-        }*/
+        }
     }
 }

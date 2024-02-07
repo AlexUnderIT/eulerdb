@@ -9,7 +9,6 @@ import ru.pandahouse.eulerdb.service.RocksDbService;
 import ru.pandahouse.eulerdb.traversal.BreadthFirstSearchAlgo;
 import ru.pandahouse.eulerdb.traversal.DepthFirstSearchAlgo;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 

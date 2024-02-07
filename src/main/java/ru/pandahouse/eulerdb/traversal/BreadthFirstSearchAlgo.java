@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import ru.pandahouse.eulerdb.service.RocksDbService;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 /*

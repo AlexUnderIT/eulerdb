@@ -36,13 +36,13 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
         visited.add(startNode);
         while(!queue.isEmpty()){
             String node = queue.poll();
-            LOGGER.info("Node: [{}] num [{}]", node, COUNTER);
+            //LOGGER.info("Node: [{}] num [{}]", node, COUNTER);
             COUNTER++;
             Optional<byte[]> neighboursByteOpt = rocksDbService.find(node.getBytes(UTF_8));
             if(neighboursByteOpt.isPresent()){
                 neighbourNodes = getNeighboursWithoutPrefix(neighboursByteOpt.get());
             } else{
-                LOGGER.error("---[ERROR] There are no such node in graph. Rollback");
+                LOGGER.error("---[ERROR] There are no node [{}] in graph. Rollback", node);
                 //throw new RuntimeException("No such node in graph");
             }
             if(!neighbourNodes.isEmpty()){
@@ -56,7 +56,8 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
         }
         long endMillis = System.currentTimeMillis();
         LOGGER.info("---END GRAPH BFS TRAVERSAL---");
-        LOGGER.info("TOTAL TIME TO TRAVERSE: {}", endMillis-startMillis);
+        LOGGER.info("TOTAL TIME TO TRAVERSE: {} ms, {} seconds.", endMillis-startMillis, (float)(endMillis - startMillis)/1000 );
+        LOGGER.info("Total count of traversed nodes: {}", COUNTER);
     }
 
 }

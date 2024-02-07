@@ -1,4 +1,4 @@
-41276e25e2803a6b2d7a634100e590eb2f2f5307~41276e25e~max~dbi471@gmail.com~-
+41276e25e2803a6b2d7a634100e590eb2f2f5307~41276e25e~max~dbi471@gmail.com~Initial commit~-
 1c26e2995e72287951ef75ce76f93991ed157e69~1c26e2995~max~dbi471@gmail.com~конфиг папки добавил, а то потерялись~41276e25e2803a6b2d7a634100e590eb2f2f5307
 5d2afcc52cb1ba81efc8b916c77b7c2f3f658311~5d2afcc52~max~dbi471@gmail.com~удалил лендинг и поправил ссылки в футере~1c26e2995e72287951ef75ce76f93991ed157e69
 d06035f40012f2510a05184a9911aae10ef49969~d06035f40~Max~dbi471@gmail.com~Merge branch 'hotfix/onpremise-landing' into 'master'~1c26e2995e72287951ef75ce76f93991ed157e69 5d2afcc52cb1ba81efc8b916c77b7c2f3f658311

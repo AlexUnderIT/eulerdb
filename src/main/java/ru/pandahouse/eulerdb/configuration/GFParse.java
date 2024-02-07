@@ -1,6 +1,8 @@
 package ru.pandahouse.eulerdb.configuration;
 
 import org.rocksdb.RocksDB;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 @Component
 public class GFParse {
-    public static final String PATH_TO_FILE = "/home/alexunderit/IdeaProjects/RepoProjects/eulerdb/test200.txt";
+    private final Logger LOGGER = LoggerFactory.getLogger(GFParse.class);
+    public static final String PATH_TO_FILE = "/home/alexunderit/IdeaProjects/RepoProjects/eulerdb/test_all.txt";
     private final String METADATA = "metadata";
 
     private final RocksDbService rocksDbService;
@@ -31,6 +34,7 @@ public class GFParse {
 
 
     public void parseFile(String pathToFile){
+        long startParse = System.currentTimeMillis();
         try (BufferedReader bufferReader = new BufferedReader(new FileReader(pathToFile))){
             String line;
             while ((line = bufferReader.readLine()) != null) {
@@ -82,6 +86,8 @@ public class GFParse {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        long endParse = System.currentTimeMillis();
+        LOGGER.info("Time to parse file: {} ms", endParse - startParse);
     }
 
     private void addMultiParents(String currentNode, String[] parentsNodes) {

@@ -31,12 +31,13 @@ public class DepthFirstSearchAlgo extends TraversalAlgorithm{
 
         long endTime = System.currentTimeMillis();
         LOGGER.info("---END GRAPH DFS TRAVERSAL---");
-        LOGGER.info("TOTAL TIME TO DFS TRAVERSE: {}", endTime - startTime);
+        LOGGER.info("TOTAL TIME TO DFS TRAVERSE: {} ms, {} seconds.", endTime - startTime, (float)(endTime - startTime)/1000 );
+        LOGGER.info("Total count of traversed nodes: {}", COUNTER);
     }
     public void dfs(String node, List<String> visited){
         List<String> neighbourNodes = Collections.emptyList();
 
-        LOGGER.info("Node: [{}] num [{}] ", node,COUNTER);
+        //LOGGER.info("Node: [{}] num [{}] ", node,COUNTER);
         COUNTER++;
         visited.add(node);
 
@@ -44,7 +45,7 @@ public class DepthFirstSearchAlgo extends TraversalAlgorithm{
         if(neighboursByteOpt.isPresent()){
             neighbourNodes = getNeighboursWithoutPrefix(neighboursByteOpt.get());
         } else{
-            LOGGER.error("---[ERROR] There are no such node in graph. Rollback");
+            LOGGER.error("---[ERROR] There are no node [{}] in graph. Rollback", node);
             //throw new RuntimeException("No such node in graph");
         }if(!neighbourNodes.isEmpty()){
             for(String nodes: neighbourNodes){

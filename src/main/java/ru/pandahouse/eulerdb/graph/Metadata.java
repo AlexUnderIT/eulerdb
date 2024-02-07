@@ -62,7 +62,6 @@ public class Metadata implements Serializable {
                 "shortHash = '" + shortHash + '\'' +
                 ", authorId = '" + authorId + '\'' +
                 ", authorEmail = '" + authorEmail + '\'' +
-                ", title = '" + title + '\'' +
-                ']';
+                ", title = '" + title + '\'';
     }
 }

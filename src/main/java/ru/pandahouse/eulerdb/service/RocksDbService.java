@@ -34,8 +34,7 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
 
     @Override
     public boolean save(byte[] key, byte[] value) {
-        LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]",
-                new String(value), new String(key));
+        LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]", new String(value), new String(key));
         try {
             rocksDB.put(key, value);
         } catch (RocksDBException e) {
@@ -249,9 +248,9 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
         LOGGER.info("-[STATS] Number of seek to db and returns: {}.", dbOptions.statistics().getTickerCount(TickerType.NUMBER_DB_SEEK_FOUND));
         LOGGER.info("-[STATS] WAL written by {} bytes.", dbOptions.statistics().getTickerCount(TickerType.WRITE_WITH_WAL));
 
-        LOGGER.info("-[STATS] Total disk usage by DB: {} bytes, or {} mb.", sstFileManager.getTotalSize(), sstFileManager.getTotalSize() / (1024 * 1024));
+        LOGGER.info("-[STATS] Total disk usage by DB: {} bytes, or {} mb.", sstFileManager.getTotalSize(), ((float)(sstFileManager.getTotalSize())) / (1024 * 1024));
         Map<String, Long> sstFileMap =  sstFileManager.getTrackedFiles();
-        LOGGER.info("-[STATS] Tracked SST files are: {}.", sstFileMap.toString());
+        LOGGER.info("-[STATS] Tracked SST files are: \n{}.", sstFileMap.toString());
 
         //Что каждая строчка значит: https://github.com/facebook/rocksdb/wiki/Compaction-Stats-and-DB-Status
         LOGGER.info("-[STATS] RocksDB stats: \n{}", rocksDB.getProperty("rocksdb.stats"));

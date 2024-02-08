@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import ru.pandahouse.eulerdb.configuration.GFParse;
+import ru.pandahouse.eulerdb.configuration.GraphParseWithoutDirection;
 import ru.pandahouse.eulerdb.service.RocksDbService;
 import ru.pandahouse.eulerdb.traversal.BreadthFirstSearchAlgo;
 import ru.pandahouse.eulerdb.traversal.DepthFirstSearchAlgo;
@@ -17,18 +18,20 @@ public class IndexController {
 
     private final RocksDbService rocksDbService;
     private final GFParse gfParse;
+    private final GraphParseWithoutDirection graphParseWithoutDirection;
     private final BreadthFirstSearchAlgo breadthFirstSearchAlgo;
     private final DepthFirstSearchAlgo depthFirstSearchAlgo;
 
     @Autowired
     public IndexController(
-        RocksDbService rocksDbService,
-        GFParse gfParse,
-        BreadthFirstSearchAlgo breadthFirstSearchAlgo,
-        DepthFirstSearchAlgo depthFirstSearchAlgo
+            RocksDbService rocksDbService,
+            GFParse gfParse, GraphParseWithoutDirection graphParseWithoutDirection,
+            BreadthFirstSearchAlgo breadthFirstSearchAlgo,
+            DepthFirstSearchAlgo depthFirstSearchAlgo
     ) {
         this.rocksDbService = rocksDbService;
         this.gfParse = gfParse;
+        this.graphParseWithoutDirection = graphParseWithoutDirection;
         this.breadthFirstSearchAlgo = breadthFirstSearchAlgo;
         this.depthFirstSearchAlgo = depthFirstSearchAlgo;
     }
@@ -93,6 +96,11 @@ public class IndexController {
     @GetMapping("/readFile")
     public void readFile(){
         gfParse.parseFile(GFParse.PATH_TO_FILE);
+    }
+    @GetMapping("/readFileWD")
+    public void readFileWD(){
+        graphParseWithoutDirection
+                .parseFileWithoutDirection(GraphParseWithoutDirection.PATH_TO_FILE);
     }
     @GetMapping("/bfs/{key}")
     public void bfsTest(@PathVariable("key") String startKey){

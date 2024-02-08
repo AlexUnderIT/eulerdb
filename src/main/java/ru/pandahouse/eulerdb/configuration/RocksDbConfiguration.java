@@ -53,7 +53,7 @@ public class RocksDbConfiguration {
     }
     @Bean
     public DBOptions dbOptions(SstFileManager sstFileManager, Statistics statistics) throws RocksDBException{
-        dbOptions = new DBOptions()
+        dbOptions = new DBOptions(new Options().setCompressionType(CompressionType.LZ4_COMPRESSION))
                 .setCreateIfMissing(true)
                 .setCreateMissingColumnFamilies(true)
                 .setAtomicFlush(true)
@@ -69,7 +69,8 @@ public class RocksDbConfiguration {
     public ColumnFamilyOptions columnFamilyOptions() {
         cfOpts = new ColumnFamilyOptions()
                 .optimizeUniversalStyleCompaction()
-                .setMergeOperator(new StringAppendOperator(", "));
+                .setMergeOperator(new StringAppendOperator(", "))
+                .setCompressionType(CompressionType.LZ4_COMPRESSION);
         return cfOpts;
     }
     @Bean

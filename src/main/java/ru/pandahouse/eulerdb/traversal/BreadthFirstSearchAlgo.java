@@ -17,19 +17,21 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
     private static final Logger LOGGER = LoggerFactory.getLogger(BreadthFirstSearchAlgo.class);
     private final RocksDbService rocksDbService;
 
+    private static long timeToDbQuery = 0;
+
     @Autowired
     public BreadthFirstSearchAlgo(RocksDbService rocksDbService) {
         this.rocksDbService = rocksDbService;
     }
 
     public void allGraphBfsTraversal(String startNode) {
-        List<String> neighbourNodes = Collections.emptyList();
+        List<String> neighbourNodes = new LinkedList<>();
         Queue<String> queue = new LinkedList<>();
         COUNTER = 0;
-        List<String> visited = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
 
-        long startMillis = System.currentTimeMillis();
         LOGGER.info("---START GRAPH BFS TRAVERSAL---");
+        long startMillis = System.currentTimeMillis();
 
         queue.add(startNode);
         visited.add(startNode);
@@ -37,12 +39,14 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
             String node = queue.poll();
             //LOGGER.info("Node: [{}] num [{}]", node, COUNTER);
             COUNTER++;
+            long startQuery = System.currentTimeMillis();
             Optional<byte[]> neighboursByteOpt = rocksDbService.find(node.getBytes(UTF_8));
+            long endQuery = System.currentTimeMillis();
+
+            timeToDbQuery += (endQuery - startQuery);
+
             if(neighboursByteOpt.isPresent()){
                 neighbourNodes = getNeighboursWithoutPrefix(neighboursByteOpt.get());
-            } else{
-                LOGGER.error("---[ERROR] There are no node [{}] in graph. Rollback", node);
-                //throw new RuntimeException("No such node in graph");
             }
             if(!neighbourNodes.isEmpty()){
                 for(String nodes: neighbourNodes){
@@ -57,6 +61,9 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
         LOGGER.info("---END GRAPH BFS TRAVERSAL---");
         LOGGER.info("TOTAL TIME TO TRAVERSE: {} ms, {} seconds.", endMillis-startMillis, (float)(endMillis - startMillis)/1000 );
         LOGGER.info("Total count of traversed nodes: {}", COUNTER);
+        LOGGER.info("Total time to DB queries: {} ms", timeToDbQuery);
+        LOGGER.info("Time to BFS without DB queries: {} ms", (endMillis-startMillis) - timeToDbQuery);
+        timeToDbQuery = 0;
     }
 
 }

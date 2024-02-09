@@ -22,7 +22,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Component
 public class GraphParseWithoutDirection {
     private final Logger LOGGER = LoggerFactory.getLogger(GraphParseWithoutDirection.class);
-    public static final String PATH_TO_FILE = "/home/alexunderit/IdeaProjects/RepoProjects/eulerdb/test_all.txt";
+    public static final String PATH_TO_FILE = "/home/alexunderit/IdeaProjects/RepoProjects/eulerdb/test_gf.txt";
     private final String METADATA = "metadata";
 
     private final RocksDbService rocksDbService;

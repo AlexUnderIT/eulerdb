@@ -34,7 +34,7 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
 
     @Override
     public boolean save(byte[] key, byte[] value) {
-        LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]", new String(value), new String(key));
+        //LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]", new String(value), new String(key));
         try {
             rocksDB.put(key, value);
         } catch (RocksDBException e) {
@@ -77,18 +77,18 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
     @Override
     public boolean add(byte[] key, byte[] value) {
         try {
-            LOGGER.info("---[DB] Operation ADD. Key: [{}], value: [{}]", new String(key), new String(value));
+            //LOGGER.info("---[DB] Operation ADD. Key: [{}], value: [{}]", new String(key), new String(value));
             byte[] resultByte = rocksDB.get(key);
             if(resultByte != null){
                 String[] resultString = new String(rocksDB.get(key)).split(", ");
                 Optional<String> isNotNew = Arrays.stream(resultString).filter(i -> i.equals(new String(value))).findAny();
                 if (isNotNew.isPresent()) {
-                    LOGGER.warn("---[WARN] Such value is on the database. Rollback operation...");
+                    //LOGGER.warn("---[WARN] Such value is on the database. Rollback operation...");
                     return false;
                 }
             }
             else {
-                LOGGER.warn("---[WARN] There is no values with such key. Making SAVE instead of ADD.");
+                //LOGGER.warn("---[WARN] There is no values with such key. Making SAVE instead of ADD.");
                 this.save(key, value);
                 return true;
             }
@@ -138,7 +138,7 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
         }
         try {
             rocksDB.put(columnFamilyHandle, key, value);
-            LOGGER.info("---[DB] PUT value [{}] with key [{}] in ColumnFamily [{}].", SerializationUtils.deserialize(value), new String(key), columnFamilyHandleName);
+            //LOGGER.info("---[DB] PUT value [{}] with key [{}] in ColumnFamily [{}].", SerializationUtils.deserialize(value), new String(key), columnFamilyHandleName);
             return true;
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] ColFam PUT ERROR. Cause: [{}], message: [{}].", e.getCause(), e.getMessage());

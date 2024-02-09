@@ -89,9 +89,10 @@ public class IndexController {
     public void getMultiByKeyList(){
         rocksDbService.findMultipleValues(List.of("1111".getBytes(),"2222".getBytes(),"3333".getBytes()));
     }
-    @GetMapping("/delMulti")
-    public void delMultiByKeyList(){
-        rocksDbService.deleteMultipleKeys("1111".getBytes(), "3333".getBytes());
+    @GetMapping("/delMulti/{key_1}/{key_2}")
+    public void delMultiByKeyList(@PathVariable("key_1") String firstKey,
+                                  @PathVariable("key_2") String secondKey){
+        rocksDbService.deleteMultipleKeys(firstKey.getBytes(), secondKey.getBytes());
     }
     @GetMapping("/readFile")
     public void readFile(){

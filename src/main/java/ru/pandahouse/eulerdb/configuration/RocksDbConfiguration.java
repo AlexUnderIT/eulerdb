@@ -56,7 +56,6 @@ public class RocksDbConfiguration {
         dbOptions = new DBOptions(new Options().setCompressionType(CompressionType.LZ4_COMPRESSION))
                 .setCreateIfMissing(true)
                 .setCreateMissingColumnFamilies(true)
-                .setAtomicFlush(true)
                 .setSstFileManager(sstFileManager)
                 .setStatistics(statistics);
         return dbOptions;

@@ -1,8 +1,6 @@
 package ru.pandahouse.eulerdb.service;
 
-import org.rocksdb.ColumnFamilyHandle;
-import org.rocksdb.RocksDB;
-import org.rocksdb.RocksDBException;
+import org.rocksdb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,20 +21,20 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
 
     private final RocksDB rocksDB;
     private final List<ColumnFamilyHandle> columnFamilyHandleList;
+    private final DBOptions dbOptions;
+    private final SstFileManager sstFileManager;
 
     @Autowired
-    public RocksDbService(
-            RocksDB rocksDB,
-            List<ColumnFamilyHandle> columnFamilyHandleList
-    ) {
+    public RocksDbService(RocksDB rocksDB, List<ColumnFamilyHandle> columnFamilyHandleList, DBOptions dbOptions, SstFileManager sstFileManager) {
         this.rocksDB = rocksDB;
         this.columnFamilyHandleList = columnFamilyHandleList;
+        this.dbOptions = dbOptions;
+        this.sstFileManager = sstFileManager;
     }
 
     @Override
     public boolean save(byte[] key, byte[] value) {
-        LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]",
-                new String(value), new String(key));
+        LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]", new String(value), new String(key));
         try {
             rocksDB.put(key, value);
         } catch (RocksDBException e) {
@@ -49,18 +47,18 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
     @Override
     public Optional<byte[]> find(byte[] key) {
         byte[] value = new byte[0];
-        LOGGER.info("---[DB] Operation GET. Key: [{}].", new String(key));
+        //LOGGER.info("---[DB] Operation GET. Key: [{}].", new String(key));
         try {
             byte[] bytes = rocksDB.get(key);
             if (bytes != null) {
                 value = bytes;
-                LOGGER.info("---[DB] GET value [{}] with key [{}].", new String(value), new String(key));
+                //LOGGER.info("---[DB] GET value [{}] with key [{}].", new String(value), new String(key));
             }
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] GET error. Cause: {} , message: [{}].", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
         }
-        if (value.length == 0) LOGGER.info("---[WARN] Didn't find any value with such key...");
+        //if (value.length == 0) LOGGER.info("---[WARN] Didn't find any value with such key...");
         return value.length != 0 ? Optional.of(value) : Optional.empty();
     }
 
@@ -237,5 +235,28 @@ public class RocksDbService implements KVRepository<byte[], byte[]> {
                         })
                 .findAny()
                 .orElseThrow(ColumnFamilyNotFoundException::new);
+    }
+    public void getStatistic(){
+        try {
+        LOGGER.info("----DATABASE STATISTIC----");
+
+        Snapshot currentSnapshot = rocksDB.getSnapshot();
+        LOGGER.info("-[STATS] Snapshot sequence num: {}", currentSnapshot.getSequenceNumber());
+        rocksDB.releaseSnapshot(currentSnapshot);
+
+        LOGGER.info("-[STATS] Hits to memtable during this session: {}.", dbOptions.statistics().getTickerCount(TickerType.MEMTABLE_HIT));
+        LOGGER.info("-[STATS] Number of seek to db and returns: {}.", dbOptions.statistics().getTickerCount(TickerType.NUMBER_DB_SEEK_FOUND));
+        LOGGER.info("-[STATS] WAL written by {} bytes.", dbOptions.statistics().getTickerCount(TickerType.WRITE_WITH_WAL));
+
+        LOGGER.info("-[STATS] Total disk usage by DB: {} bytes, or {} mb.", sstFileManager.getTotalSize(), ((float)(sstFileManager.getTotalSize())) / (1024 * 1024));
+        Map<String, Long> sstFileMap =  sstFileManager.getTrackedFiles();
+        LOGGER.info("-[STATS] Tracked SST files are: \n{}.", sstFileMap.toString());
+
+        //Что каждая строчка значит: https://github.com/facebook/rocksdb/wiki/Compaction-Stats-and-DB-Status
+        LOGGER.info("-[STATS] RocksDB stats: \n{}", rocksDB.getProperty("rocksdb.stats"));
+        } catch (RocksDBException e){
+            LOGGER.error("--[ERROR] Cause: {}, message: {}.", e.getCause(), e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 }

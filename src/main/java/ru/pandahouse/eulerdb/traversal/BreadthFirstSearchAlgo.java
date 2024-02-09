@@ -7,7 +7,6 @@ import org.springframework.stereotype.Component;
 import ru.pandahouse.eulerdb.service.RocksDbService;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 /*
@@ -18,32 +17,36 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
     private static final Logger LOGGER = LoggerFactory.getLogger(BreadthFirstSearchAlgo.class);
     private final RocksDbService rocksDbService;
 
+    private static long timeToDbQuery = 0;
+
     @Autowired
     public BreadthFirstSearchAlgo(RocksDbService rocksDbService) {
         this.rocksDbService = rocksDbService;
     }
 
     public void allGraphBfsTraversal(String startNode) {
-        List<String> neighbourNodes = Collections.emptyList();
+        List<String> neighbourNodes = new LinkedList<>();
         Queue<String> queue = new LinkedList<>();
         COUNTER = 0;
-        List<String> visited = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
 
-        long startMillis = System.currentTimeMillis();
         LOGGER.info("---START GRAPH BFS TRAVERSAL---");
+        long startMillis = System.currentTimeMillis();
 
         queue.add(startNode);
         visited.add(startNode);
         while(!queue.isEmpty()){
             String node = queue.poll();
-            LOGGER.info("Node: [{}] num [{}]", node, COUNTER);
+            //LOGGER.info("Node: [{}] num [{}]", node, COUNTER);
             COUNTER++;
+            long startQuery = System.currentTimeMillis();
             Optional<byte[]> neighboursByteOpt = rocksDbService.find(node.getBytes(UTF_8));
+            long endQuery = System.currentTimeMillis();
+
+            timeToDbQuery += (endQuery - startQuery);
+
             if(neighboursByteOpt.isPresent()){
                 neighbourNodes = getNeighboursWithoutPrefix(neighboursByteOpt.get());
-            } else{
-                LOGGER.error("---[ERROR] There are no such node in graph. Rollback");
-                //throw new RuntimeException("No such node in graph");
             }
             if(!neighbourNodes.isEmpty()){
                 for(String nodes: neighbourNodes){
@@ -56,7 +59,11 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
         }
         long endMillis = System.currentTimeMillis();
         LOGGER.info("---END GRAPH BFS TRAVERSAL---");
-        LOGGER.info("TOTAL TIME TO TRAVERSE: {}", endMillis-startMillis);
+        LOGGER.info("TOTAL TIME TO TRAVERSE: {} ms, {} seconds.", endMillis-startMillis, (float)(endMillis - startMillis)/1000 );
+        LOGGER.info("Total count of traversed nodes: {}", COUNTER);
+        LOGGER.info("Total time to DB queries: {} ms", timeToDbQuery);
+        LOGGER.info("Time to BFS without DB queries: {} ms", (endMillis-startMillis) - timeToDbQuery);
+        timeToDbQuery = 0;
     }
 
 }

@@ -15,10 +15,13 @@ import java.io.IOException;
 import java.util.Arrays;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-
+/*
+*  Класс, в котором файл парсится без добавления префикса
+* отвечающего за направление
+*/
 @Component
-public class GFParse {
-    private final Logger LOGGER = LoggerFactory.getLogger(GFParse.class);
+public class GraphParseWithoutDirection {
+    private final Logger LOGGER = LoggerFactory.getLogger(GraphParseWithoutDirection.class);
     public static final String PATH_TO_FILE = "/home/alexunderit/IdeaProjects/RepoProjects/eulerdb/test_all.txt";
     private final String METADATA = "metadata";
 
@@ -26,13 +29,12 @@ public class GFParse {
     private final RocksDB rocksDB;
 
     @Autowired
-    public GFParse(RocksDbService rocksDbService, RocksDB rocksDb) {
+    public GraphParseWithoutDirection(RocksDbService rocksDbService, RocksDB rocksDb) {
         this.rocksDbService = rocksDbService;
         this.rocksDB = rocksDb;
     }
 
-
-    public void parseFile(String pathToFile){
+    public void parseFileWithoutDirection(String pathToFile){
         long startParse = System.currentTimeMillis();
         try (BufferedReader bufferReader = new BufferedReader(new FileReader(pathToFile))){
             String line;
@@ -61,26 +63,26 @@ public class GFParse {
                 //Если
                 if (rocksDB.keyExists(currentNodeHash.getBytes(UTF_8))) {
                     if (notOneParent) {
-                        addMultiParents(currentNodeHash,parentsHash.split(" "));
+                        addMultiParentsWND(currentNodeHash,parentsHash.split(" "));
                     } else{
-                        addParent(currentNodeHash,parentsHash);
+                        addParentWND(currentNodeHash,parentsHash);
                     }
                 } else {
                     if(notOneParent){
-                        saveMultiParent(currentNodeHash,parentsHash.split(" "));
+                        saveMultiParentWND(currentNodeHash,parentsHash.split(" "));
                     } else{
-                        saveParent(currentNodeHash,parentsHash);
+                        saveParentWND(currentNodeHash,parentsHash);
                     }
                 }
                 if (!parentsHash.contains("-")) {
                     if(notOneParent){
-                        addChildToMultiParents(parentsHash.split(" "), currentNodeHash);
+                        addChildToMultiParentsWND(parentsHash.split(" "), currentNodeHash);
                     } else{
-                        addChildToOneParent(parentsHash, currentNodeHash);
+                        addChildToOneParentWND(parentsHash, currentNodeHash);
                     }
                 }
                 //Добавляем метадату в семейство колонок
-                addMetadataToColumnFamily(metadata,currentNodeHash);
+                addMetadataToColumnFamilyWND(metadata,currentNodeHash);
             }
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -88,36 +90,37 @@ public class GFParse {
         long endParse = System.currentTimeMillis();
         LOGGER.info("Time to parse file: {} ms", endParse - startParse);
     }
-
-    private void addMultiParents(String currentNode, String[] parentsNodes) {
+    private void addMultiParentsWND(String currentNode, String[] parentsNodes) {
         Arrays
                 .stream(parentsNodes)
-                .forEach(i -> rocksDbService.add(currentNode.getBytes(UTF_8), ("r".concat(i)).getBytes(UTF_8)));
+                .forEach(i -> rocksDbService.add(currentNode.getBytes(UTF_8), i.getBytes(UTF_8)));
     }
 
-    private void addParent(String currentNode, String parentNode) {
-        rocksDbService.add(currentNode.getBytes(UTF_8), ("r".concat(parentNode)).getBytes(UTF_8));
+    private void addParentWND(String currentNode, String parentNode) {
+        rocksDbService.add(currentNode.getBytes(UTF_8), parentNode.getBytes(UTF_8));
     }
 
-    private void addChildToOneParent(String parentNode, String currentNode) {
-        rocksDbService.add(parentNode.getBytes(UTF_8), ("l".concat(currentNode)).getBytes(UTF_8));
+    private void addChildToOneParentWND(String parentNode, String currentNode) {
+        rocksDbService.add(parentNode.getBytes(UTF_8), currentNode.getBytes(UTF_8));
     }
-    private void addChildToMultiParents(String[] parentsNodes, String currentNode){
-        Arrays.stream(parentsNodes).forEach(i -> rocksDbService.add(i.getBytes(UTF_8), ("l".concat(currentNode)).getBytes(UTF_8)));
+    private void addChildToMultiParentsWND(String[] parentsNodes, String currentNode){
+        Arrays.stream(parentsNodes).forEach(i -> rocksDbService.add(i.getBytes(UTF_8), currentNode.getBytes(UTF_8)));
     }
-    private void saveMultiParent(String currentNode, String[] parentsNode){
-        rocksDbService.save(currentNode.getBytes(UTF_8),("r".concat(parentsNode[0])).getBytes(UTF_8));
+    private void saveMultiParentWND(String currentNode, String[] parentsNode){
+        rocksDbService.save(currentNode.getBytes(UTF_8),parentsNode[0].getBytes(UTF_8));
         Arrays.stream(parentsNode)
                 .skip(1)
                 .forEach(i ->
                         rocksDbService.add(currentNode.getBytes(UTF_8),
-                                ("r".concat(i)).getBytes(UTF_8))
-                        );
+                                i.getBytes(UTF_8))
+                );
     }
-    private void saveParent(String currentNode, String parentNode){
-        rocksDbService.save(currentNode.getBytes(UTF_8), ("r".concat(parentNode)).getBytes(UTF_8));
+    private void saveParentWND(String currentNode, String parentNode){
+        rocksDbService.save(currentNode.getBytes(UTF_8), parentNode.getBytes(UTF_8));
     }
-    private void addMetadataToColumnFamily(Metadata metadata, String currentHash){
+    private void addMetadataToColumnFamilyWND(Metadata metadata, String currentHash){
         rocksDbService.saveColumnFamily(METADATA, currentHash.getBytes(UTF_8), SerializationUtils.serialize(metadata));
     }
+
+
 }

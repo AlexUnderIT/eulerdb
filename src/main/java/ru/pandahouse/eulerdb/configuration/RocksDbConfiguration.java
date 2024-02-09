@@ -44,7 +44,6 @@ public class RocksDbConfiguration {
 
         return db;
     }
-
     @Bean
     public List<ColumnFamilyDescriptor> cfDescriptors(ColumnFamilyOptions columnFamilyOptions) {
         return Arrays.asList(
@@ -52,30 +51,39 @@ public class RocksDbConfiguration {
                 new ColumnFamilyDescriptor("metadata".getBytes(StandardCharsets.UTF_8), columnFamilyOptions)
         );
     }
-
     @Bean
-    public DBOptions dbOptions() {
-
-        dbOptions = new DBOptions()
+    public DBOptions dbOptions(SstFileManager sstFileManager, Statistics statistics) throws RocksDBException{
+        dbOptions = new DBOptions(new Options().setCompressionType(CompressionType.LZ4_COMPRESSION))
                 .setCreateIfMissing(true)
                 .setCreateMissingColumnFamilies(true)
-                .setAtomicFlush(true);
+                .setAtomicFlush(true)
+                .setSstFileManager(sstFileManager)
+                .setStatistics(statistics);
         return dbOptions;
     }
-
+    @Bean
+    public SstFileManager sstFileManager() throws RocksDBException{
+        return new SstFileManager(Env.getDefault());
+    }
     @Bean
     public ColumnFamilyOptions columnFamilyOptions() {
         cfOpts = new ColumnFamilyOptions()
                 .optimizeUniversalStyleCompaction()
-                .setMergeOperator(new StringAppendOperator(", "));
+                .setMergeOperator(new StringAppendOperator(", "))
+                .setCompressionType(CompressionType.LZ4_COMPRESSION);
         return cfOpts;
     }
-
     @Bean
     @Qualifier("columnFamilies")
     public List<ColumnFamilyHandle> columnFamilyConfig() {
         columnFamilyHandleList = new ArrayList<>();
         return columnFamilyHandleList;
+    }
+    @Bean
+    public Statistics statistics(){
+        Statistics statistic = new Statistics();
+        statistic.setStatsLevel(StatsLevel.ALL);
+        return statistic;
     }
     @PreDestroy
     public void closeConnections() {

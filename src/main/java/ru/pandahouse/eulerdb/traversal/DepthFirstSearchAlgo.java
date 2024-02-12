@@ -21,6 +21,7 @@ public class DepthFirstSearchAlgo extends TraversalAlgorithm {
     }
 
     public void allGraphDfsTraversal(String startNode) {
+        COUNTER = 0;
         Set<String> visited = new HashSet<>();
         LOGGER.info("---START GRAPH DFS TRAVERSAL---");
 

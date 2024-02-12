@@ -19,7 +19,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Component
 public class GFParse {
     private final Logger LOGGER = LoggerFactory.getLogger(GFParse.class);
-    public static final String PATH_TO_FILE = "/home/alexunderit/IdeaProjects/RepoProjects/eulerdb/test_git.txt";
+    private static final String PATH_TO_FILE = "/home/alexunderit/IdeaProjects/RepoProjects/eulerdb/";
     private final String METADATA = "metadata";
 
     private final RocksDbService rocksDbService;
@@ -33,9 +33,9 @@ public class GFParse {
 
 
 
-    public void parseFile(String pathToFile){
+    public void parseFile(String fileName){
         long startParse = System.currentTimeMillis();
-        try (BufferedReader bufferReader = new BufferedReader(new FileReader(pathToFile))){
+        try (BufferedReader bufferReader = new BufferedReader(new FileReader(PATH_TO_FILE + fileName))){
             String line;
             while ((line = bufferReader.readLine()) != null) {
                 boolean notOneParent = false;

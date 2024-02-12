@@ -94,9 +94,9 @@ public class IndexController {
                                   @PathVariable("key_2") String secondKey){
         rocksDbService.deleteMultipleKeys(firstKey.getBytes(), secondKey.getBytes());
     }
-    @GetMapping("/readFile")
-    public void readFile(){
-        gfParse.parseFile(GFParse.PATH_TO_FILE);
+    @GetMapping("/readFile/{name}")
+    public void readFile(@PathVariable("name") String fileName){
+        gfParse.parseFile(fileName + ".txt");
     }
     @GetMapping("/readFileWD")
     public void readFileWD(){

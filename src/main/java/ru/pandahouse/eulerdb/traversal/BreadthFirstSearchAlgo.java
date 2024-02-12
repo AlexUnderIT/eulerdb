@@ -56,11 +56,12 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
         }
         long endMillis = System.currentTimeMillis();
         LOGGER.info("---END GRAPH BFS TRAVERSAL---");
-        LOGGER.info("TOTAL TIME TO TRAVERSE: {} ms, {} seconds.", endMillis-startMillis, (float)(endMillis - startMillis)/1000 );
+        LOGGER.info("TOTAL TIME TO BFS TRAVERSE: {} ms, {} seconds.", endMillis-startMillis, (float)(endMillis - startMillis)/1000 );
         LOGGER.info("Total count of traversed nodes: {}", COUNTER);
         LOGGER.info("Total time to DB queries: {} ms", timeToDbQuery);
         LOGGER.info("Time to BFS without DB queries: {} ms", (endMillis-startMillis) - timeToDbQuery);
         timeToDbQuery = 0;
+        COUNTER = 0;
     }
 
 }

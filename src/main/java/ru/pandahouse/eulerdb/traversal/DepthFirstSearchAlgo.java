@@ -43,6 +43,7 @@ public class DepthFirstSearchAlgo extends TraversalAlgorithm {
         List<String> neighbourNodes = new ArrayList<>();
         COUNTER++;
         visited.add(node);
+        LOGGER.info("NODE: {}.", node);
 
         long startQuery = System.currentTimeMillis();
         Optional<byte[]> neighboursByteOpt = rocksDbService.find(node.getBytes(UTF_8));
@@ -63,10 +64,9 @@ public class DepthFirstSearchAlgo extends TraversalAlgorithm {
 
     public void dfs_without_recursion(String node, Set<String> visited) {
         Deque<String> stack = new ArrayDeque<>();
-        List<String> neighbourNodes = new ArrayList<>();
 
         stack.push(node);
-        while(!stack.isEmpty()){
+        while (!stack.isEmpty()) {
             String currentNode = stack.pop();
 
             long startQuery = System.currentTimeMillis();
@@ -74,15 +74,17 @@ public class DepthFirstSearchAlgo extends TraversalAlgorithm {
             long endQuery = System.currentTimeMillis();
             timeToDbQuery += (endQuery - startQuery);
 
-            if(neighboursByteOpt.isPresent()){
-                neighbourNodes = getNeighboursWithoutPrefix(neighboursByteOpt.get());
-            }
-            if(!visited.contains(currentNode)){
+            if (!visited.contains(currentNode)) {
+                //LOGGER.info("NODE: {}.", currentNode); // Переместили запись в журнал сюда, чтобы она была после проверки на посещение
                 visited.add(currentNode);
                 COUNTER++;
-                for(String nodes: neighbourNodes){
-                    if(!visited.contains(nodes)){
-                        stack.push(nodes);
+            }
+
+            if (neighboursByteOpt.isPresent()) {
+                List<String> neighbourNodes = getNeighboursWithoutPrefix(neighboursByteOpt.get());
+                for (String neighbour : neighbourNodes) {
+                    if (!visited.contains(neighbour)) {
+                        stack.push(neighbour);
                     }
                 }
             }

@@ -14,7 +14,7 @@ Class, that implements BFS algorithm
 */
 @Component
 public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
-    private static final Logger LOGGER = LoggerFactory.getLogger(BreadthFirstSearchAlgo.class);
+    private final Logger LOGGER = LoggerFactory.getLogger(BreadthFirstSearchAlgo.class);
     private final RocksDbService rocksDbService;
 
     @Autowired
@@ -35,6 +35,7 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
         visited.add(startNode);
         while(!queue.isEmpty()){
             String node = queue.poll();
+            //LOGGER.info("NODE: {}.", node);
             COUNTER++;
             long startQuery = System.currentTimeMillis();
             Optional<byte[]> neighboursByteOpt = rocksDbService.find(node.getBytes(UTF_8));
@@ -63,5 +64,4 @@ public class BreadthFirstSearchAlgo extends TraversalAlgorithm{
         timeToDbQuery = 0;
         COUNTER = 0;
     }
-
 }

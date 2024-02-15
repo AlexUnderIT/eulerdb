@@ -19,7 +19,7 @@ import java.util.List;
 public class RocksDbConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RocksDbConfiguration.class);
-    private static final String DB_PATH = "/home/alexunderit/rocksdb";
+    private static final String DB_PATH = "/Users/alexunderit/rocksdb";
     private RocksDB db;
     private DBOptions dbOptions;
 

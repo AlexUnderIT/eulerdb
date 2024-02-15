@@ -19,7 +19,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Component
 public class GFParse {
     private final Logger LOGGER = LoggerFactory.getLogger(GFParse.class);
-    private static final String PATH_TO_FILE = "/home/alexunderit/IdeaProjects/RepoProjects/eulerdb/";
+    private static final String PATH_TO_FILE = "/Users/alexunderit/IdeaProjects/RepoProjects/eulerdb/";
     private final String METADATA = "metadata";
 
     private final RocksDbService rocksDbService;

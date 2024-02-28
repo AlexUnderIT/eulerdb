@@ -1,39 +1,52 @@
 package ru.pandahouse.eulerdb.controller;
 
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.internal.storage.commitgraph.CommitGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.SerializationUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import ru.pandahouse.eulerdb.configuration.GFParse;
 import ru.pandahouse.eulerdb.configuration.GraphParseWithoutDirection;
+import ru.pandahouse.eulerdb.configuration.JGitConfig;
 import ru.pandahouse.eulerdb.service.RocksDbService;
 import ru.pandahouse.eulerdb.traversal.BreadthFirstSearchAlgo;
 import ru.pandahouse.eulerdb.traversal.DepthFirstSearchAlgo;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 public class IndexController {
 
+    Logger LOGGER = LoggerFactory.getLogger(IndexController.class);
     private final RocksDbService rocksDbService;
     private final GFParse gfParse;
     private final GraphParseWithoutDirection graphParseWithoutDirection;
     private final BreadthFirstSearchAlgo breadthFirstSearchAlgo;
     private final DepthFirstSearchAlgo depthFirstSearchAlgo;
+    private final JGitConfig jGitConfig;
+
 
     @Autowired
     public IndexController(
             RocksDbService rocksDbService,
             GFParse gfParse, GraphParseWithoutDirection graphParseWithoutDirection,
             BreadthFirstSearchAlgo breadthFirstSearchAlgo,
-            DepthFirstSearchAlgo depthFirstSearchAlgo
+            DepthFirstSearchAlgo depthFirstSearchAlgo, JGitConfig jGitConfig
     ) {
         this.rocksDbService = rocksDbService;
         this.gfParse = gfParse;
         this.graphParseWithoutDirection = graphParseWithoutDirection;
         this.breadthFirstSearchAlgo = breadthFirstSearchAlgo;
         this.depthFirstSearchAlgo = depthFirstSearchAlgo;
+        this.jGitConfig = jGitConfig;
     }
 
     @GetMapping("/put/{key}/{value}")
@@ -114,5 +127,25 @@ public class IndexController {
     @GetMapping("stats")
     public void getStats(){
         rocksDbService.getStatistic();
+    }
+    @GetMapping("graph/{hash}")
+    public void commitGraphFileTest(@PathVariable("hash") String commitHash){
+        try {
+            LOGGER.info("----COMMIT-GRAPH FILE TEST START");
+            CommitGraph commitGraph = jGitConfig.getCommitGraphFile();
+            rocksDbService.save("1".getBytes(), SerializationUtils.serialize(commitGraph));
+            JGitConfig.getComitGraphFileInfo(commitGraph,commitHash);
+
+            LOGGER.info("----COMMIT-GRAPH FILE TEST MIDDLE");
+            Optional<byte[]> cgOpt = rocksDbService.find("1".getBytes());
+            if(cgOpt.isPresent()){
+                CommitGraph commitGraph1 = (CommitGraph) SerializationUtils.deserialize(cgOpt.get());
+            }
+            JGitConfig.getComitGraphFileInfo(commitGraph,commitHash);
+
+            LOGGER.info("----COMMIT-GRAPH FILE TEST END");
+        } catch (IOException | GitAPIException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

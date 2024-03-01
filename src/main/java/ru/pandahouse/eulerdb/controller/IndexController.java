@@ -2,6 +2,8 @@ package ru.pandahouse.eulerdb.controller;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.internal.storage.commitgraph.CommitGraph;
+import org.eclipse.jgit.internal.storage.file.FileCommitGraph;
+import org.eclipse.jgit.internal.storage.file.ObjectDirectory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -128,11 +130,15 @@ public class IndexController {
     public void getStats(){
         rocksDbService.getStatistic();
     }
-    @GetMapping("graph/{hash}")
+    /*@GetMapping("graph/{hash}")
     public void commitGraphFileTest(@PathVariable("hash") String commitHash){
         try {
             LOGGER.info("----COMMIT-GRAPH FILE TEST START");
             CommitGraph commitGraph = jGitConfig.getCommitGraphFile();
+
+            File cgFile = new File(commitGraph);
+            ObjectDirectory objectDirectory = new
+
             rocksDbService.save("1".getBytes(), SerializationUtils.serialize(commitGraph));
             JGitConfig.getComitGraphFileInfo(commitGraph,commitHash);
 
@@ -147,5 +153,5 @@ public class IndexController {
         } catch (IOException | GitAPIException e) {
             throw new RuntimeException(e);
         }
-    }
+    }*/
 }

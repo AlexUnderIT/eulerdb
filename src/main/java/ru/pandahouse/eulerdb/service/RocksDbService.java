@@ -1,42 +1,6 @@
 package ru.pandahouse.eulerdb.service;
 
-import org.rocksdb.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.SerializationUtils;
-import ru.pandahouse.eulerdb.exceptions.ColumnFamilyNotFoundException;
-import ru.pandahouse.eulerdb.repository.KVRepository;
-
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-@Service
-public class RocksDbService implements KVRepository<byte[], byte[]> {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RocksDbService.class);
-
-    private final RocksDB rocksDB;
-    private final List<ColumnFamilyHandle> columnFamilyHandleList;
-    private final DBOptions dbOptions;
-    private final SstFileManager sstFileManager;
-
-    @Autowired
-    public RocksDbService(RocksDB rocksDB, List<ColumnFamilyHandle> columnFamilyHandleList, DBOptions dbOptions, SstFileManager sstFileManager) {
-        this.rocksDB = rocksDB;
-        this.columnFamilyHandleList = columnFamilyHandleList;
-        this.dbOptions = dbOptions;
-        this.sstFileManager = sstFileManager;
-    }
-
-    @Override
-    public boolean save(byte[] key, byte[] value) {
-        //LOGGER.info("---[DB] Operation PUT. Value: [{}], Key: [{}]", new String(value), new String(key));
-        try {
-            rocksDB.put(key, value);
+i
         } catch (RocksDBException e) {
             LOGGER.error("---[ERROR] PUT error. Cause: {} , message: {}", e.getCause(), e.getMessage());
             throw new RuntimeException(e);
